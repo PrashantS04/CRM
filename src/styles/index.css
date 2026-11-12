@@ -1,0 +1,95 @@
+/*
+ * Cascade layers: MUI (emotion) is placed between Tailwind's base and utilities
+ * so utility classes can always override MUI defaults.
+ */
+@layer theme, base, mui, components, utilities;
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/preflight.css' layer(base);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+/*
+ * Tailwind utility names. VALUES live in src/theme/tokens.ts and arrive as
+ * --pi-* variables (see theme/cssVars.ts). Do not put hex values here.
+ */
+@theme {
+  --color-*: initial;
+  --color-white: var(--pi-surface);
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  --color-brand: var(--pi-brand);
+  --color-brand-dark: var(--pi-brand-dark);
+  --color-brand-tint: var(--pi-brand-tint);
+  --color-brand-soft: var(--pi-brand-soft);
+  --color-brand-border: var(--pi-brand-border);
+  --color-teal: var(--pi-teal);
+  --color-teal-soft: var(--pi-teal-soft);
+  --color-teal-text: var(--pi-teal-text);
+  --color-ink: var(--pi-ink);
+  --color-navy: var(--pi-navy);
+  --color-text: var(--pi-text);
+  --color-text-soft: var(--pi-text-soft);
+  --color-muted: var(--pi-muted);
+  --color-subtle: var(--pi-subtle);
+  --color-canvas: var(--pi-canvas);
+  --color-surface: var(--pi-surface);
+  --color-surface-alt: var(--pi-surface-alt);
+  --color-column: var(--pi-column);
+  --color-line: var(--pi-line);
+  --color-line-soft: var(--pi-line-soft);
+  --color-line-strong: var(--pi-line-strong);
+  --color-neutral-soft: var(--pi-neutral-soft);
+  --color-neutral-text: var(--pi-neutral-text);
+  --color-success: var(--pi-success);
+  --color-success-soft: var(--pi-success-soft);
+  --color-success-strong: var(--pi-success-strong);
+  --color-warning: var(--pi-warning);
+  --color-warning-soft: var(--pi-warning-soft);
+  --color-warning-text: var(--pi-warning-text);
+  --color-amber-soft: var(--pi-amber-soft);
+  --color-notice-bg: var(--pi-notice-bg);
+  --color-notice-border: var(--pi-notice-border);
+  --color-notice-text: var(--pi-notice-text);
+  --color-info: var(--pi-info);
+  --color-info-soft: var(--pi-info-soft);
+  --color-purple: var(--pi-purple);
+  --color-purple-soft: var(--pi-purple-soft);
+  --color-chart-1: var(--pi-chart1);
+  --color-chart-2: var(--pi-chart2);
+  --color-chart-3: var(--pi-chart3);
+  --color-chart-4: var(--pi-chart4);
+  --color-chart-5: var(--pi-chart5);
+  --color-overlay: var(--pi-overlay);
+
+  --radius-chip: var(--pi-radius-chip);
+  --radius-control: var(--pi-radius-control);
+  --radius-input: var(--pi-radius-input);
+  --radius-card: var(--pi-radius-card);
+  --radius-pill: var(--pi-radius-pill);
+  --radius-dialog: var(--pi-radius-dialog);
+
+  --shadow-card: var(--pi-shadow-card);
+  --shadow-card-sm: var(--pi-shadow-card-sm);
+  --shadow-card-hover: var(--pi-shadow-card-hover);
+  --shadow-primary: var(--pi-shadow-primary);
+  --shadow-dialog: var(--pi-shadow-dialog);
+
+  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--color-canvas);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+  }
+}
