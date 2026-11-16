@@ -4,9 +4,9 @@ import { useToast } from '@/components/feedback/toastContext'
 import { FormSelect, FormTextField } from '@/components/form'
 import { FormDialog } from '@/components/ui'
 import { CURRENT_USER, OWNERS, TASK_PRIORITIES } from '@/constants/lists'
+import { useCreateTask } from '@/hooks/useCreateTask'
 import { useZodForm } from '@/hooks/useZodForm'
 import type { TaskArea } from '@/types/domain'
-import { useCreateTask } from './hooks'
 
 const taskSchema = z.object({
   title: z.string().trim().min(1, 'Enter a task title'),

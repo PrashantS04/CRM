@@ -1,6 +1,7 @@
 import type { ComponentType } from 'react'
 import { Navigate, type RouteObject } from 'react-router-dom'
 import { PageLoader } from '@/components/feedback/PageLoader'
+import { AuthGuard } from '@/features/auth/AuthGuard'
 import { AppShell } from './layout/AppShell'
 import { RouteErrorPage } from './RouteErrorPage'
 
@@ -32,8 +33,19 @@ export const routes: RouteObject[] = [
     ...lazyPage(() => import('@/features/auth/ForgotPasswordPage'), 'ForgotPasswordPage'),
   },
   {
+    // Cognito Hosted UI redirect target (VITE_COGNITO_REDIRECT_SIGN_IN).
+    path: 'home',
+    errorElement: <RouteErrorPage />,
+    hydrateFallbackElement: <PageLoader />,
+    ...lazyPage(() => import('@/features/auth/AuthCallbackPage'), 'AuthCallbackPage'),
+  },
+  {
     path: '/',
-    element: <AppShell />,
+    element: (
+      <AuthGuard>
+        <AppShell />
+      </AuthGuard>
+    ),
     errorElement: <RouteErrorPage />,
     hydrateFallbackElement: <PageLoader />,
     children: [

@@ -3,7 +3,10 @@ import type { FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { TextField } from '@/components/form'
 import { Button } from '@/components/ui'
-// import { getPendingUsername, savePendingUsername } from '../pendingSignIn'
+import { useToast } from '@/components/feedback/toastContext'
+import { signInWithAzure } from '@/sso/config'
+import { getAuthErrorMessage } from '../authErrors'
+import { getPendingUsername, savePendingUsername } from '../pendingSignIn'
 import AuthCard from './AuthCard'
 
 const AzureIcon = () => (
@@ -17,21 +20,33 @@ const AzureIcon = () => (
 
 const SignInForm = () => {
   const navigate = useNavigate()
-  const [username, setUsername] = useState('')
+  const { error: showError } = useToast()
+  const [username, setUsername] = useState(() => getPendingUsername())
+  const [isAzureLoading, setIsAzureLoading] = useState(false)
   const [usernameError, setUsernameError] = useState('')
 
   const handleNext = (event: FormEvent) => {
     event.preventDefault()
-    // const nextUsername = username.trim()
-    // if (!nextUsername) {
-    //   setUsernameError('Please enter your username.')
-    //   return
-    // }
-    // setUsernameError('')
+    const nextUsername = username.trim()
+    if (!nextUsername) {
+      setUsernameError('Please enter your username.')
+      return
+    }
+    setUsernameError('')
 
-    // savePendingUsername(nextUsername)
-    navigate('/enter-password', { state: { username: username.trim() } })
-    // navigate('/enter-password', { state: { username: nextUsername } })
+    savePendingUsername(nextUsername)
+    navigate('/enter-password', { state: { username: nextUsername } })
+  }
+
+  const handleAzureSignIn = async () => {
+    if (isAzureLoading) return
+    setIsAzureLoading(true)
+    try {
+      await signInWithAzure()
+    } catch (error) {
+      showError(getAuthErrorMessage(error))
+      setIsAzureLoading(false)
+    }
   }
 
   return (
@@ -45,10 +60,19 @@ const SignInForm = () => {
         <Button
           type="button"
           variant="secondary"
-          startIcon={<AzureIcon />}
+          onClick={handleAzureSignIn}
+          disabled={isAzureLoading}
+          startIcon={isAzureLoading ? undefined : <AzureIcon />}
           className="h-11 w-full gap-2 rounded-md border-ink bg-white text-sm font-medium text-ink hover:bg-surface-alt"
         >
-          Continue with Azure-AD-Login
+          {isAzureLoading ? (
+            <span className="flex items-center">
+              <span className="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-brand" />
+              Connecting...
+            </span>
+          ) : (
+            'Continue with Azure-AD-Login'
+          )}
         </Button>
       </div>
 

@@ -2,9 +2,8 @@ import IconButton from '@mui/material/IconButton'
 import { Menu } from 'lucide-react'
 import { Fragment, useContext } from 'react'
 import { useMatches } from 'react-router-dom'
-import { Avatar } from '@/components/ui/Avatar'
-import { CURRENT_USER } from '@/constants/lists'
 import { BreadcrumbContext } from './breadcrumbContext'
+import { UserMenu } from './UserMenu'
 
 export interface RouteHandle {
   crumb?: string
@@ -43,10 +42,7 @@ export function TopBar({ onMenuClick }: TopBarProps) {
           ))}
         </nav>
       </div>
-      <div className="flex items-center gap-[9px] font-semibold">
-        <Avatar name={CURRENT_USER} />
-        <span className="hidden sm:inline">{CURRENT_USER}</span>
-      </div>
+      <UserMenu />
     </header>
   )
 }

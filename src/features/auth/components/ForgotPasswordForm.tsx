@@ -3,62 +3,98 @@ import type { FormEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { TextField } from '@/components/form'
 import { Button } from '@/components/ui'
-// import { getPendingUsername, savePendingUsername } from '../pendingSignIn'
+import { useToast } from '@/components/feedback/toastContext'
+import {
+  completePasswordReset,
+  startPasswordReset,
+} from '@/sso/config'
+import { getAuthErrorMessage } from '../authErrors'
+import { getPendingUsername, savePendingUsername } from '../pendingSignIn'
 import AuthCard from './AuthCard'
 
 const ForgotPasswordForm = () => {
   const navigate = useNavigate()
   const location = useLocation()
+  const { error: showError, success: showSuccess } = useToast()
 
   const [username, setUsername] = useState(
-    () => (location.state as { username?: string } | null)?.username || '',
+    () =>
+      (location.state as { username?: string } | null)?.username ||
+      getPendingUsername(),
   )
   const [code, setCode] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [codeSent, setCodeSent] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
 
   const [usernameError, setUsernameError] = useState('')
   const [codeError, setCodeError] = useState('')
   const [newPasswordError, setNewPasswordError] = useState('')
   const [confirmPasswordError, setConfirmPasswordError] = useState('')
 
-  const handleSendCode = (event: FormEvent) => {
+  const handleSendCode = async (event: FormEvent) => {
     event.preventDefault()
+    if (isLoading) return
 
-    // const nextUsername = username.trim()
-    // if (!nextUsername) {
-    //   setUsernameError('Please enter your username.')
-    //   return
-    // }
-    // setUsernameError('')
+    const nextUsername = username.trim()
+    if (!nextUsername) {
+      setUsernameError('Please enter your username.')
+      return
+    }
+    setUsernameError('')
 
-    // savePendingUsername(nextUsername)
-    setCodeSent(true)
+    setIsLoading(true)
+    try {
+      await startPasswordReset(nextUsername)
+      savePendingUsername(nextUsername)
+      setCodeSent(true)
+      showSuccess('If an account exists, a verification code was sent.')
+    } catch (error) {
+      showError(getAuthErrorMessage(error))
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const handleReset = (event: FormEvent) => {
+  const handleReset = async (event: FormEvent) => {
     event.preventDefault()
-    navigate('/', { replace: true })
+    if (isLoading) return
 
-    // if (!code.trim()) {
-    //   setCodeError('Please enter the verification code.')
-    //   return
-    // }
-    // if (!newPassword) {
-    //   setNewPasswordError('Please enter your new password.')
-    //   return
-    // }
-    // if (!confirmPassword) {
-    //   setConfirmPasswordError('Please confirm your new password.')
-    //   return
-    // }
-    // if (newPassword !== confirmPassword) {
-    //   setConfirmPasswordError('Passwords do not match.')
-    //   return
-    // }
-    //
-    // navigate('/', { replace: true })
+    if (!code.trim()) {
+      setCodeError('Please enter the verification code.')
+      return
+    }
+    if (!newPassword) {
+      setNewPasswordError('Please enter your new password.')
+      return
+    }
+    if (!confirmPassword) {
+      setConfirmPasswordError('Please confirm your new password.')
+      return
+    }
+    if (newPassword !== confirmPassword) {
+      setConfirmPasswordError('Passwords do not match.')
+      return
+    }
+    setCodeError('')
+    setNewPasswordError('')
+    setConfirmPasswordError('')
+
+    setIsLoading(true)
+    try {
+      await completePasswordReset({
+        username,
+        confirmationCode: code.trim(),
+        newPassword,
+      })
+      showSuccess('Password updated. Please sign in.')
+      navigate('/', { replace: true })
+    } catch (error) {
+      showError(getAuthErrorMessage(error))
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -143,9 +179,19 @@ const ForgotPasswordForm = () => {
           type="submit"
           variant="primary"
           fullWidth
+          disabled={isLoading}
           className="mb-3 h-12 rounded-md text-base font-semibold"
         >
-          {codeSent ? 'Update password' : 'Send code'}
+          {isLoading ? (
+            <span className="flex items-center">
+              <span className="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white" />
+              {codeSent ? 'Updating...' : 'Sending...'}
+            </span>
+          ) : codeSent ? (
+            'Update password'
+          ) : (
+            'Send code'
+          )}
         </Button>
 
         <Button

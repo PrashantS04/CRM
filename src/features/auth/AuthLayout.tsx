@@ -1,9 +1,52 @@
-import type { ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { fetchAuthSession } from '@aws-amplify/auth'
 import Watermark from './Watermark'
 import loginBgVid from '@/assets/video/login-bg.mp4'
+import {
+  clearSessionTokens,
+  getAccessToken,
+  isTokenExpired,
+} from '@/services/session-manager'
+import { setAnonymous } from './authStore'
 
 /** Shared frame for the auth pages: background video, headline and watermark. */
 export function AuthLayout({ children }: { children: ReactNode }) {
+  const navigate = useNavigate()
+  const [checking, setChecking] = useState(true)
+
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const localToken = getAccessToken()
+        if (localToken && !isTokenExpired(localToken)) {
+          navigate('/dashboard', { replace: true })
+          return
+        }
+        if (localToken) {
+          clearSessionTokens()
+        }
+
+        const session = await fetchAuthSession({ forceRefresh: false })
+        if (session?.tokens?.accessToken) {
+          navigate('/dashboard', { replace: true })
+          return
+        }
+
+        setAnonymous()
+      } catch {
+        // No valid session — show the auth page.
+        setAnonymous()
+      } finally {
+        setChecking(false)
+      }
+    }
+
+    void checkSession()
+  }, [navigate])
+
+  if (checking) return null
+
   return (
     <div className="relative min-h-[100dvh] w-full overflow-x-hidden">
       <Watermark className="z-[99999]" />

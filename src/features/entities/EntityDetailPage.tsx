@@ -2,6 +2,7 @@ import { Plus } from 'lucide-react'
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { usePageCrumb } from '@/app/layout/breadcrumbContext'
+import { NewTaskDialog } from '@/components/NewTaskDialog'
 import { QueryState } from '@/components/feedback/QueryState'
 import { useToast } from '@/components/feedback/toastContext'
 import {
@@ -22,7 +23,6 @@ import {
 import { usePeople } from '@/features/people/hooks'
 import { detailPath } from '@/features/opportunities/config'
 import { useAllOpportunities } from '@/features/opportunities/hooks'
-import { NewTaskDialog } from '@/features/tasks/NewTaskDialog'
 import type { Person } from '@/types/domain'
 import { useEntity } from './hooks'
 

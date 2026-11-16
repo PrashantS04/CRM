@@ -1,5 +1,5 @@
 import Drawer from '@mui/material/Drawer'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import { BreadcrumbContext, type BreadcrumbApi } from './breadcrumbContext'
 import { Sidebar } from './Sidebar'
@@ -11,7 +11,22 @@ const SIDEBAR_WIDTH = 248
 export function AppShell() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [tail, setTail] = useState<string | null>(null)
+  const [sidebarExpanded, setSidebarExpanded] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('crm_sidebar_open') ?? 'true') as boolean
+    } catch {
+      return true
+    }
+  })
   const breadcrumbs = useMemo<BreadcrumbApi>(() => ({ tail, setTail }), [tail])
+
+  useEffect(() => {
+    const handleToggle = (event: Event) => {
+      setSidebarExpanded((event as CustomEvent<boolean>).detail)
+    }
+    window.addEventListener('sidebar-toggle', handleToggle)
+    return () => window.removeEventListener('sidebar-toggle', handleToggle)
+  }, [])
 
   return (
     <BreadcrumbContext.Provider value={breadcrumbs}>
@@ -22,7 +37,13 @@ export function AppShell() {
         Skip to content
       </a>
       {/* minmax(0,1fr) lets the content column shrink so wide children (kanban, tables) scroll inside their own container instead of stretching the page. */}
-      <div className="border-teal grid min-h-screen grid-cols-[minmax(0,1fr)] border-t-[3px] md:grid-cols-[248px_minmax(0,1fr)]">
+      <div
+        className={`border-teal grid min-h-screen grid-cols-[minmax(0,1fr)] border-t-[3px] transition-[grid-template-columns] duration-300 ease-in-out ${
+          sidebarExpanded
+            ? 'md:grid-cols-[248px_minmax(0,1fr)]'
+            : 'md:grid-cols-[64px_minmax(0,1fr)]'
+        }`}
+      >
         <aside className="bg-surface border-line hidden border-r md:block">
           <Sidebar />
         </aside>
