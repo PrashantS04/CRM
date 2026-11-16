@@ -2,9 +2,10 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Check } from 'lucide-react'
+import { Checkbox, TextField } from '@/components/form'
+import { Button } from '@/components/ui'
 import { getPendingUsername } from '../pendingSignIn'
 import AuthCard from './AuthCard'
-import AuthCheckbox from './AuthCheckbox'
 
 const PasswordForm = () => {
   const navigate = useNavigate()
@@ -149,15 +150,11 @@ const PasswordForm = () => {
       >
         {!needsNewPassword ? (
           <>
-            <label
-              htmlFor="password"
-              className="mb-1.5 block text-sm font-semibold text-ink"
-            >
-              Password <span className="text-brand">*</span>
-            </label>
-            <input
+            <TextField
               id="password"
               name="password"
+              label="Password"
+              required
               type={showPassword ? 'text' : 'password'}
               autoComplete="current-password"
               value={password}
@@ -165,63 +162,49 @@ const PasswordForm = () => {
                 setPassword(event.target.value)
                 setPasswordError('')
               }}
-              className={`mb-2 h-11 w-full rounded-md border px-3 text-sm text-ink outline-none focus:border-brand focus:ring-1 focus:ring-brand ${
-                passwordError ? 'border-brand' : 'border-line-strong'
-              }`}
+              error={passwordError}
+              containerClassName="mb-2"
             />
-            {passwordError && (
-              <p className="mb-4 text-xs text-brand">{passwordError}</p>
-            )}
 
             <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <AuthCheckbox
+              <Checkbox
                 id="show-password"
                 checked={showPassword}
                 onChange={setShowPassword}
                 label="Show password"
               />
-              <button
+              <Button
                 type="button"
-                className="shrink-0 text-left text-sm font-medium text-brand hover:underline sm:text-right"
+                variant="link"
+                className="shrink-0 text-sm font-medium text-brand hover:underline sm:text-right"
                 onClick={() =>
                   navigate('/forgot-password', { state: { username } })
                 }
               >
                 Forgot your password?
-              </button>
+              </Button>
             </div>
           </>
         ) : (
           <>
             {/* 1. New password */}
-            <div className="mb-1.5">
-              <label
-                htmlFor="new-password"
-                className="mb-1 block text-xs font-semibold text-ink"
-              >
-                New password <span className="text-brand">*</span>
-              </label>
-              <input
-                id="new-password"
-                name="new-password"
-                type={showPassword ? 'text' : 'password'}
-                autoComplete="new-password"
-                value={newPassword}
-                placeholder="Enter new password"
-                onChange={(event) => {
-                  setNewPassword(event.target.value)
-                  setNewPasswordError('')
-                }}
-                className={`h-9 w-full rounded-md border px-3 text-sm text-ink outline-none placeholder:text-muted focus:border-brand focus:ring-1 focus:ring-brand ${
-                  newPasswordError ? 'border-brand' : 'border-line-strong'
-                }`}
-              />
-              {newPasswordError && (
-                <p className="mt-0.5 text-[11px] text-brand">
-                  {newPasswordError}
-                </p>
-              )}
-            </div>
+            <TextField
+              id="new-password"
+              name="new-password"
+              label="New password"
+              required
+              size="sm"
+              type={showPassword ? 'text' : 'password'}
+              autoComplete="new-password"
+              value={newPassword}
+              placeholder="Enter new password"
+              onChange={(event) => {
+                setNewPassword(event.target.value)
+                setNewPasswordError('')
+              }}
+              error={newPasswordError}
+              containerClassName="mb-1.5"
+            />
 
             {/* Password Policy Criteria Checklist */}
             <ul className="mb-2.5 mt-1 grid grid-cols-2 gap-x-2 gap-y-1 text-[11px]">
@@ -253,39 +236,27 @@ const PasswordForm = () => {
             </ul>
 
             {/* 2. Confirm new password */}
-            <div className="mb-2">
-              <label
-                htmlFor="confirm-password"
-                className="mb-1 block text-xs font-semibold text-ink"
-              >
-                Confirm new password{' '}
-                <span className="text-brand">*</span>
-              </label>
-              <input
-                id="confirm-password"
-                name="confirm-password"
-                type={showPassword ? 'text' : 'password'}
-                autoComplete="new-password"
-                value={confirmPassword}
-                placeholder="Re-enter new password"
-                onChange={(event) => {
-                  setConfirmPassword(event.target.value)
-                  setConfirmPasswordError('')
-                }}
-                className={`h-9 w-full rounded-md border px-3 text-sm text-ink outline-none placeholder:text-muted focus:border-brand focus:ring-1 focus:ring-brand ${
-                  confirmPasswordError ? 'border-brand' : 'border-line-strong'
-                }`}
-              />
-              {confirmPasswordError && (
-                <p className="mt-0.5 text-[11px] text-brand">
-                  {confirmPasswordError}
-                </p>
-              )}
-            </div>
+            <TextField
+              id="confirm-password"
+              name="confirm-password"
+              label="Confirm new password"
+              required
+              size="sm"
+              type={showPassword ? 'text' : 'password'}
+              autoComplete="new-password"
+              value={confirmPassword}
+              placeholder="Re-enter new password"
+              onChange={(event) => {
+                setConfirmPassword(event.target.value)
+                setConfirmPasswordError('')
+              }}
+              error={confirmPasswordError}
+              containerClassName="mb-2"
+            />
 
             {/* Show Password Toggle */}
             <div className="mb-2.5">
-              <AuthCheckbox
+              <Checkbox
                 id="show-new-password"
                 checked={showPassword}
                 onChange={setShowPassword}
@@ -294,25 +265,19 @@ const PasswordForm = () => {
             </div>
 
             {/* 3. Family name */}
-            <div className="mb-2">
-              <label
-                htmlFor="family-name"
-                className="mb-1 block text-xs font-semibold text-ink"
-              >
-                Family name
-              </label>
-              <input
-                id="family-name"
-                name="family-name"
-                type="text"
-                value={familyName}
-                placeholder="Enter your family name or last name"
-                onChange={(event) => {
-                  setFamilyName(event.target.value)
-                }}
-                className="h-9 w-full rounded-md border border-line-strong px-3 text-sm text-ink outline-none placeholder:text-muted focus:border-brand focus:ring-1 focus:ring-brand"
-              />
-            </div>
+            <TextField
+              id="family-name"
+              name="family-name"
+              label="Family name"
+              size="sm"
+              type="text"
+              value={familyName}
+              placeholder="Enter your family name or last name"
+              onChange={(event) => {
+                setFamilyName(event.target.value)
+              }}
+              containerClassName="mb-2"
+            />
 
             {/* 4. Given name */}
             <div className="mb-2">

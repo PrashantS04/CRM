@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { TextField } from '@/components/form'
+import { Button } from '@/components/ui'
 // import { getPendingUsername, savePendingUsername } from '../pendingSignIn'
 import AuthCard from './AuthCard'
 
@@ -40,13 +42,14 @@ const SignInForm = () => {
 
       <div className="w-full">
         <p className="mb-3 text-sm font-medium text-ink">With other accounts</p>
-        <button
+        <Button
           type="button"
-          className="flex h-11 w-full items-center justify-center gap-2 rounded-md border border-ink bg-white text-sm font-medium text-ink transition hover:bg-surface-alt"
+          variant="secondary"
+          startIcon={<AzureIcon />}
+          className="h-11 w-full gap-2 rounded-md border-ink bg-white text-sm font-medium text-ink hover:bg-surface-alt"
         >
-          <AzureIcon />
           Continue with Azure-AD-Login
-        </button>
+        </Button>
       </div>
 
       <div className="my-6 flex w-full items-center gap-3">
@@ -57,15 +60,11 @@ const SignInForm = () => {
 
       <form className="w-full" onSubmit={handleNext}>
         <p className="mb-3 text-sm font-medium text-ink">With existing account</p>
-        <label
-          htmlFor="username"
-          className="mb-1.5 block text-sm font-semibold text-ink"
-        >
-          Username <span className="text-brand">*</span>
-        </label>
-        <input
+        <TextField
           id="username"
           name="username"
+          label="Username"
+          required
           type="text"
           autoComplete="username"
           value={username}
@@ -74,20 +73,18 @@ const SignInForm = () => {
             setUsernameError('')
           }}
           placeholder="Enter username"
-          className={`mb-2 h-11 w-full rounded-md border px-3 text-sm text-ink outline-none placeholder:text-muted focus:border-brand focus:ring-1 focus:ring-brand ${
-            usernameError ? 'border-brand' : 'border-line-strong'
-          }`}
+          error={usernameError}
+          containerClassName="mb-4"
         />
-        {usernameError && (
-          <p className="mb-3 text-xs text-brand">{usernameError}</p>
-        )}
 
-        <button
+        <Button
           type="submit"
-          className="flex h-12 w-full items-center justify-center rounded-md bg-brand text-base font-semibold text-white transition hover:bg-brand-dark"
+          variant="primary"
+          fullWidth
+          className="h-12 rounded-md text-base font-semibold"
         >
           Next
-        </button>
+        </Button>
       </form>
     </AuthCard>
   )

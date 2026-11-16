@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { TextField } from '@/components/form'
+import { Button } from '@/components/ui'
 // import { getPendingUsername, savePendingUsername } from '../pendingSignIn'
 import AuthCard from './AuthCard'
 
@@ -66,15 +68,11 @@ const ForgotPasswordForm = () => {
       </h2>
 
       <form className="w-full" onSubmit={codeSent ? handleReset : handleSendCode}>
-        <label
-          htmlFor="reset-username"
-          className="mb-1.5 block text-sm font-semibold text-ink"
-        >
-          Username <span className="text-brand">*</span>
-        </label>
-        <input
+        <TextField
           id="reset-username"
           name="username"
+          label="Username"
+          required
           type="text"
           autoComplete="username"
           value={username}
@@ -84,25 +82,17 @@ const ForgotPasswordForm = () => {
           }}
           disabled={codeSent}
           placeholder="Enter username"
-          className={`mb-2 h-11 w-full rounded-md border px-3 text-sm text-ink outline-none placeholder:text-muted focus:border-brand focus:ring-1 focus:ring-brand disabled:bg-surface-alt ${
-            usernameError ? 'border-brand' : 'border-line-strong'
-          }`}
+          error={usernameError}
+          containerClassName="mb-4"
         />
-        {usernameError && (
-          <p className="mb-4 text-xs text-brand">{usernameError}</p>
-        )}
 
         {codeSent && (
           <>
-            <label
-              htmlFor="reset-code"
-              className="mb-1.5 block text-sm font-semibold text-ink"
-            >
-              Verification code <span className="text-brand">*</span>
-            </label>
-            <input
+            <TextField
               id="reset-code"
               name="code"
+              label="Verification code"
+              required
               type="text"
               inputMode="numeric"
               autoComplete="one-time-code"
@@ -111,23 +101,15 @@ const ForgotPasswordForm = () => {
                 setCode(event.target.value)
                 setCodeError('')
               }}
-              className={`mb-2 h-11 w-full rounded-md border px-3 text-sm text-ink outline-none focus:border-brand focus:ring-1 focus:ring-brand ${
-                codeError ? 'border-brand' : 'border-line-strong'
-              }`}
+              error={codeError}
+              containerClassName="mb-4"
             />
-            {codeError && (
-              <p className="mb-4 text-xs text-brand">{codeError}</p>
-            )}
 
-            <label
-              htmlFor="reset-new-password"
-              className="mb-1.5 block text-sm font-semibold text-ink"
-            >
-              New password <span className="text-brand">*</span>
-            </label>
-            <input
+            <TextField
               id="reset-new-password"
               name="new-password"
+              label="New password"
+              required
               type="password"
               autoComplete="new-password"
               value={newPassword}
@@ -135,23 +117,15 @@ const ForgotPasswordForm = () => {
                 setNewPassword(event.target.value)
                 setNewPasswordError('')
               }}
-              className={`mb-2 h-11 w-full rounded-md border px-3 text-sm text-ink outline-none focus:border-brand focus:ring-1 focus:ring-brand ${
-                newPasswordError ? 'border-brand' : 'border-line-strong'
-              }`}
+              error={newPasswordError}
+              containerClassName="mb-4"
             />
-            {newPasswordError && (
-              <p className="mb-4 text-xs text-brand">{newPasswordError}</p>
-            )}
 
-            <label
-              htmlFor="reset-confirm-password"
-              className="mb-1.5 block text-sm font-semibold text-ink"
-            >
-              Confirm password <span className="text-brand">*</span>
-            </label>
-            <input
+            <TextField
               id="reset-confirm-password"
               name="confirm-password"
+              label="Confirm password"
+              required
               type="password"
               autoComplete="new-password"
               value={confirmPassword}
@@ -159,30 +133,30 @@ const ForgotPasswordForm = () => {
                 setConfirmPassword(event.target.value)
                 setConfirmPasswordError('')
               }}
-              className={`mb-2 h-11 w-full rounded-md border px-3 text-sm text-ink outline-none focus:border-brand focus:ring-1 focus:ring-brand ${
-                confirmPasswordError ? 'border-brand' : 'border-line-strong'
-              }`}
+              error={confirmPasswordError}
+              containerClassName="mb-5"
             />
-            {confirmPasswordError && (
-              <p className="mb-5 text-xs text-brand">{confirmPasswordError}</p>
-            )}
           </>
         )}
 
-        <button
+        <Button
           type="submit"
-          className="mb-3 flex h-12 w-full items-center justify-center rounded-md bg-brand text-base font-semibold text-white transition hover:bg-brand-dark"
+          variant="primary"
+          fullWidth
+          className="mb-3 h-12 rounded-md text-base font-semibold"
         >
           {codeSent ? 'Update password' : 'Send code'}
-        </button>
+        </Button>
 
-        <button
+        <Button
           type="button"
+          variant="secondary"
+          fullWidth
           onClick={() => navigate('/')}
-          className="flex h-12 w-full items-center justify-center rounded-md border border-brand bg-white text-base font-semibold text-brand transition hover:bg-brand-tint"
+          className="h-12 rounded-md border-brand bg-white text-base font-semibold text-brand hover:bg-brand-tint"
         >
           Back to sign in
-        </button>
+        </Button>
       </form>
     </AuthCard>
   )

@@ -1,5 +1,7 @@
+export { Checkbox, type CheckboxProps } from './Checkbox'
 export { FormCheckbox } from './FormCheckbox'
 export { FormField } from './FormField'
 export { FormSelect } from './FormSelect'
 export { FormTextField } from './FormTextField'
+export { TextField, type TextFieldProps } from './TextField'
 export { toOption, type SelectOption, type SelectOptions } from './selectOptions'
