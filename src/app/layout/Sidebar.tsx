@@ -109,7 +109,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
             PrivateInvest
           </>
         ) : (
-          <span aria-hidden className="bg-brand block size-8" />
+          <span aria-hidden className="bg-brand block size-6" />
         )}
       </div>
 
