@@ -50,7 +50,7 @@ src/
 
 ## Known gaps (prototype parity, not built)
 
-- Auth (Microsoft 365 sign-in, brief §6.2) is deliberately not implemented yet.
+- Auth (Microsoft 365 /, brief §6.2) is deliberately not implemented yet.
 - Several prototype buttons only show a notice (report builder, Log call, New event, Edit forms...) exactly as
   the prototype's `alert()`s did. PDF export is a notice; CSV/XLS download the filtered list.
 - Gates G3–G6, the LMS field-map confirmation screen (C4), Security holder, Tranches and the CP tab are not in

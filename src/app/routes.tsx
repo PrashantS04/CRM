@@ -2,7 +2,7 @@ import type { ComponentType } from 'react'
 import { Navigate, type RouteObject } from 'react-router-dom'
 import { PageLoader } from '@/components/feedback/PageLoader'
 import { AppShell } from './layout/AppShell'
-import { NotFoundPage, RouteErrorPage } from './RouteErrorPage'
+import { RouteErrorPage } from './RouteErrorPage'
 
 /** Code-splits a page: `lazyPage(() => import('...'), 'NamedExport')`. */
 function lazyPage<K extends string>(
@@ -15,11 +15,29 @@ function lazyPage<K extends string>(
 export const routes: RouteObject[] = [
   {
     path: '/',
+    errorElement: <RouteErrorPage />,
+    hydrateFallbackElement: <PageLoader />,
+    ...lazyPage(() => import('@/features/auth/LoginPage'), 'LoginPage'),
+  },
+  {
+    path: 'enter-password',
+    errorElement: <RouteErrorPage />,
+    hydrateFallbackElement: <PageLoader />,
+    ...lazyPage(() => import('@/features/auth/EnterPasswordPage'), 'EnterPasswordPage'),
+  },
+  {
+    path: 'forgot-password',
+    errorElement: <RouteErrorPage />,
+    hydrateFallbackElement: <PageLoader />,
+    ...lazyPage(() => import('@/features/auth/ForgotPasswordPage'), 'ForgotPasswordPage'),
+  },
+  {
+    path: '/',
     element: <AppShell />,
     errorElement: <RouteErrorPage />,
     hydrateFallbackElement: <PageLoader />,
     children: [
-      { index: true, element: <Navigate to="/dashboard" replace /> },
+      // { index: true, element: <Navigate to="/dashboard" replace /> },
       {
         path: 'dashboard',
         handle: { crumb: 'Dashboard' },
@@ -163,7 +181,7 @@ export const routes: RouteObject[] = [
           },
         ],
       },
-      { path: '*', element: <NotFoundPage /> },
+      { path: '*', element: <Navigate to="/" replace /> },
     ],
   },
 ]
