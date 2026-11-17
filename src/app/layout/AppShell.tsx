@@ -38,13 +38,13 @@ export function AppShell() {
       </a>
       {/* minmax(0,1fr) lets the content column shrink so wide children (kanban, tables) scroll inside their own container instead of stretching the page. */}
       <div
-        className={`border-teal grid min-h-screen grid-cols-[minmax(0,1fr)] border-t-[3px] transition-[grid-template-columns] duration-300 ease-in-out ${
+        className={`border-teal grid h-screen grid-rows-[minmax(0,1fr)] grid-cols-[minmax(0,1fr)] overflow-hidden border-t-[3px] transition-[grid-template-columns] duration-300 ease-in-out ${
           sidebarExpanded
             ? 'md:grid-cols-[248px_minmax(0,1fr)]'
             : 'md:grid-cols-[64px_minmax(0,1fr)]'
         }`}
       >
-        <aside className="bg-surface border-line hidden border-r md:block">
+        <aside className="bg-surface border-line sticky top-0 hidden h-screen border-r md:block">
           <Sidebar />
         </aside>
         <Drawer
@@ -56,7 +56,7 @@ export function AppShell() {
           <Sidebar onNavigate={() => setDrawerOpen(false)} />
         </Drawer>
 
-        <div className="min-w-0">
+        <div className="min-w-0 min-h-0 overflow-y-auto">
           <TopBar onMenuClick={() => setDrawerOpen(true)} />
           <main id="main" className="mx-auto max-w-[1600px] px-5 pt-[30px] pb-[42px] md:px-[34px]">
             <Outlet />

@@ -113,6 +113,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
         )}
       </div>
 
+      <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
       {NAV_ITEMS.map((item) => {
         const isActive = pathname === item.to || pathname.startsWith(`${item.to}/`)
         const Icon = item.icon
@@ -179,12 +180,13 @@ export function Sidebar({ onNavigate }: SidebarProps) {
           </div>
         )
       })}
+      </div>
 
       {/* <div className="text-subtle mt-auto p-2.5 text-xs">
         <span aria-hidden className="bg-success mr-1.5 inline-block size-[7px] rounded-full" />
         System connected
       </div> */}
-      <div className="border-line-soft mt-auto border-t pt-2">
+      <div className="border-line-soft border-t pt-2">
         <button
           type="button"
           onClick={() => setConfirmOpen(true)}
