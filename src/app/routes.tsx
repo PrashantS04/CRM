@@ -3,7 +3,7 @@ import { Navigate, type RouteObject } from 'react-router-dom'
 import { PageLoader } from '@/components/feedback/PageLoader'
 import { AuthGuard } from '@/features/auth/AuthGuard'
 import { AppShell } from './layout/AppShell'
-import { RouteErrorPage } from './RouteErrorPage'
+import { NotFoundPage, RouteErrorPage } from './RouteErrorPage'
 
 /** Code-splits a page: `lazyPage(() => import('...'), 'NamedExport')`. */
 function lazyPage<K extends string>(
@@ -86,6 +86,16 @@ export const routes: RouteObject[] = [
             ),
           },
         ],
+      },
+      {
+        path: 'targets',
+        handle: { crumb: 'Targets' },
+        ...lazyPage(() => import('@/features/targets/TargetsPage'), 'TargetsPage'),
+      },
+      {
+        path: 'calendar',
+        handle: { crumb: 'Calendar' },
+        ...lazyPage(() => import('@/features/calendar/CalendarPage'), 'CalendarPage'),
       },
       {
         path: 'loan-opportunities',
@@ -191,9 +201,14 @@ export const routes: RouteObject[] = [
             handle: { crumb: 'Validations' },
             ...lazyPage(() => import('@/features/settings/ValidationsPage'), 'ValidationsPage'),
           },
+          {
+            path: 'roles',
+            handle: { crumb: 'Roles and permissions' },
+            ...lazyPage(() => import('@/features/settings/GovernancePage'), 'GovernancePage'),
+          },
         ],
       },
-      { path: '*', element: <Navigate to="/" replace /> },
+      { path: '*', element: <NotFoundPage /> },
     ],
   },
 ]

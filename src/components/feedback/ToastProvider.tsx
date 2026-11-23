@@ -1,4 +1,5 @@
 import Alert from '@mui/material/Alert'
+import Slide, { type SlideProps } from '@mui/material/Slide'
 import Snackbar from '@mui/material/Snackbar'
 import { useMemo, useState, type ReactNode } from 'react'
 import { ToastContext, type ToastApi, type ToastSeverity } from './toastContext'
@@ -7,6 +8,11 @@ interface ToastState {
   message: string
   severity: ToastSeverity
   key: number
+}
+
+/** Slides in from the right edge and back out the same way (top-right anchor). */
+function SlideFromRight(props: SlideProps) {
+  return <Slide {...props} direction="left" />
 }
 
 /** App-wide notifications (replaces browser `alert()`). */
@@ -28,9 +34,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       <Snackbar
         key={toast?.key}
         open={open}
-        autoHideDuration={4000}
+        autoHideDuration={5000}
         onClose={(_, reason) => reason !== 'clickaway' && setOpen(false)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+        slots={{ transition: SlideFromRight }}
+        transitionDuration={300}
         slotProps={{ transition: { onExited: () => setToast(null) } }}
       >
         <Alert

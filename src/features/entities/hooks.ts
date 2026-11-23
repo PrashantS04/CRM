@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { activityApi } from '@/api/activity'
 import { entitiesApi, type CreateEntityInput } from '@/api/entities'
 import { queryKeys } from '@/api/queryKeys'
 import type { ID } from '@/types/domain'
@@ -8,6 +9,12 @@ export const useEntities = () =>
 
 export const useEntity = (id: ID) =>
   useQuery({ queryKey: queryKeys.entities.detail(id), queryFn: () => entitiesApi.get(id) })
+
+export const useEntityTimeline = (id: ID) =>
+  useQuery({
+    queryKey: [...queryKeys.entities.detail(id), 'timeline'],
+    queryFn: () => activityApi.entityTimeline(id),
+  })
 
 export function useCreateEntity() {
   const queryClient = useQueryClient()

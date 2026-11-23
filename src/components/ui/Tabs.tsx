@@ -22,7 +22,7 @@ export function Tabs<T extends string>({ value, onChange, items, label }: TabsPr
       aria-label={label}
       variant="scrollable"
       scrollButtons={false}
-      sx={{ mb: 2.5 }}
+      sx={{ mb: 2.5, mt: 2 }}
     >
       {items.map((item) => (
         <Tab key={item.value} value={item.value} label={item.label} disableRipple />

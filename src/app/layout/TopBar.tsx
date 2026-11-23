@@ -2,6 +2,7 @@ import IconButton from '@mui/material/IconButton'
 import { Menu } from 'lucide-react'
 import { Fragment, useContext } from 'react'
 import { useMatches } from 'react-router-dom'
+import { NotificationCenter } from '@/components/notifications/NotificationCenter'
 import { BreadcrumbContext } from './breadcrumbContext'
 import { UserMenu } from './UserMenu'
 
@@ -42,7 +43,10 @@ export function TopBar({ onMenuClick }: TopBarProps) {
           ))}
         </nav>
       </div>
-      <UserMenu />
+      <div className="flex items-center gap-3">
+        <NotificationCenter />
+        <UserMenu />
+      </div>
     </header>
   )
 }

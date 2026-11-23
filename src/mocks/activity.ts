@@ -1,7 +1,7 @@
 import { CURRENT_USER } from '@/constants/lists'
 import { daysFromNow } from '@/lib/date'
 import { formatCurrency, formatDate, formatDateTime } from '@/lib/format'
-import type { ActivityItem, Opportunity, Person, TimelineEntry } from '@/types/domain'
+import type { ActivityItem, Entity, Opportunity, Person, TimelineEntry } from '@/types/domain'
 
 const monthLabel = () =>
   new Intl.DateTimeFormat('en-AU', { month: 'long', year: 'numeric' }).format(new Date())
@@ -93,6 +93,26 @@ export function buildPersonTimeline(p: Person): TimelineEntry[] {
       id: 'h3',
       title: 'Note added',
       detail: `“Confirmed next steps for diligence.” · ${formatDate(daysFromNow(-3))} · ${CURRENT_USER}`,
+    },
+  ]
+}
+
+export function buildEntityTimeline(e: Entity): TimelineEntry[] {
+  return [
+    {
+      id: 'e-h1',
+      title: `Compliance review with ${e.name}`,
+      detail: `Outbound · 22 minutes · Today, 09:12 · ${CURRENT_USER}`,
+    },
+    {
+      id: 'e-h2',
+      title: 'Email pointer: Registry documents requested',
+      detail: `To registry@${e.name.toLowerCase().replaceAll(' ', '')}.com · Yesterday, 14:05 · Attachment names stored`,
+    },
+    {
+      id: 'e-h3',
+      title: 'Note added',
+      detail: `“Relationship manager confirmed authorised signatory.” · ${formatDate(daysFromNow(-4))} · ${CURRENT_USER}`,
     },
   ]
 }
