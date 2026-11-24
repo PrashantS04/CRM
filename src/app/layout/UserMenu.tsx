@@ -1,4 +1,4 @@
-import { ChevronDown, LogOut } from 'lucide-react'
+import { LogOut } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Avatar } from '@/components/ui/Avatar'
 import { CURRENT_USER } from '@/constants/lists'
@@ -37,11 +37,11 @@ export function UserMenu() {
         onClick={() => setOpen((prev) => !prev)}
         aria-haspopup="menu"
         aria-expanded={open}
-        className="flex items-center gap-[9px] font-semibold"
+        className="flex items-center gap-[9px] font-semibold cursor-pointer"
       >
         <Avatar name={name} />
-        <span className="hidden sm:inline">{name}</span>
-        <ChevronDown size={16} className="text-muted" aria-hidden />
+        {/* <span className="hidden sm:inline">{name}</span>
+        <ChevronDown size={16} className="text-muted" aria-hidden /> */}
       </button>
 
       {open && (
@@ -57,11 +57,33 @@ export function UserMenu() {
                 <p className="text-ink m-0 truncate text-[15px] font-semibold">{name}</p>
               </div>
             </div>
-            {detail && (
-              <div className="border-line bg-surface-alt mt-3 rounded-lg border p-2">
-                <span className="text-subtle block truncate text-xs">{detail}</span>
-              </div>
-            )}
+            {user?.role && <div
+              className="flex items-center justify-between gap-2 p-2 bg-[#EEEEEE] rounded-lg border-1 border-[#DDDDDD] mt-2 bg-neutral-soft"
+            >
+              <span className="text-[12px] sm:text-sm font-semibold text-black">
+                Role
+              </span>
+
+              <span
+                className="
+                  inline-block
+                  max-w-[150px]
+                  truncate
+                  bg-white
+                  text-gray-900
+                  text-[11px]
+                  sm:text-xs
+                  font-medium
+                  px-2.5
+                  py-1
+                  rounded-md
+                  border
+                  border-white
+                "
+              >
+                {user.role.charAt(0).toUpperCase() + user.role.slice(1).toLowerCase()}
+              </span>
+            </div>}
           </div>
 
           <div className="border-line px-3">

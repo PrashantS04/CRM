@@ -193,7 +193,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
           onMouseEnter={(event) => showTooltip(event, 'Logout')}
           onMouseLeave={hideTooltip}
           className={cn(
-            'text-muted hover:bg-surface-alt my-0.5 flex w-full items-center rounded-lg no-underline transition-all duration-200',
+            'text-muted hover:bg-surface-alt my-0.5 flex w-full items-center rounded-lg no-underline transition-all duration-200 font-semibold transition-colors hover:bg-brand-tint hover:text-brand',
             isExpanded ? 'gap-[11px] px-[13px] py-3 text-left' : 'mx-auto size-10 justify-center',
           )}
         >

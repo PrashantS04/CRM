@@ -40,10 +40,16 @@ export const completeAuthenticatedSession = async () => {
   }
 
   const payload = decodeJwtPayload(idToken) ?? {}
+  const accessPayload =
+    (session.tokens.accessToken.payload as Record<string, unknown> | undefined) ?? {}
+  const rawGroups = accessPayload['cognito:groups']
+  const groups = Array.isArray(rawGroups) ? rawGroups.map(String) : []
   const user: AuthUser = {
     username: String(payload['cognito:username'] ?? ''),
     email: String(payload.email ?? ''),
     name: String(payload.name ?? ''),
+    role: groups[0] ?? '',
+    groups,
   }
   setAuthenticated(user)
 

@@ -4,6 +4,9 @@ export interface AuthUser {
   username: string
   email: string
   name: string
+  /** First Cognito group the user belongs to, or '' when ungrouped. */
+  role: string
+  groups: string[]
 }
 
 export type AuthStatus = 'checking' | 'authenticated' | 'anonymous'
