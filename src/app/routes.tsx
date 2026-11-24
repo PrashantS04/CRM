@@ -179,6 +179,11 @@ export const routes: RouteObject[] = [
         ...lazyPage(() => import('@/features/reports/ReportsPage'), 'ReportsPage'),
       },
       {
+        path: 'user-management',
+        handle: { crumb: 'User management' },
+        ...lazyPage(() => import('@/features/users/UserManagementPage'), 'UserManagementPage'),
+      },
+      {
         path: 'settings',
         handle: { crumb: 'Settings' },
         children: [
@@ -203,8 +208,7 @@ export const routes: RouteObject[] = [
           },
           {
             path: 'roles',
-            handle: { crumb: 'Roles and permissions' },
-            ...lazyPage(() => import('@/features/settings/GovernancePage'), 'GovernancePage'),
+            element: <Navigate to="/user-management" replace />,
           },
         ],
       },

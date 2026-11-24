@@ -58,7 +58,7 @@ export function AppShell() {
 
         <div className="min-w-0 min-h-0 overflow-y-auto">
           <TopBar onMenuClick={() => setDrawerOpen(true)} />
-          <main id="main" className="mx-auto max-w-[1600px] px-5 pt-[30px] pb-[42px] md:px-[34px]">
+          <main id="main" className="mx-auto max-w-[1600px] px-3 pt-[30px] pb-[42px] md:px-[25px]">
             <Outlet />
           </main>
         </div>

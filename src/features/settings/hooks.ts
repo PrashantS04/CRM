@@ -38,3 +38,8 @@ export const useMoveStage = () =>
   usePipelineMutation(({ id, index, direction }: { id: ID; index: number; direction: -1 | 1 }) =>
     pipelinesApi.moveStage(id, index, direction),
   )
+
+export const useReorderStage = () =>
+  usePipelineMutation(({ id, index, to }: { id: ID; index: number; to: number }) =>
+    pipelinesApi.reorderStage(id, index, to),
+  )

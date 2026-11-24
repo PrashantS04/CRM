@@ -9,6 +9,7 @@ import {
   Target,
   TrendingUp,
   Users,
+  UserCog,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -44,6 +45,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { label: 'Tasks', to: '/tasks', icon: CheckSquare },
   { label: 'Calendar', to: '/calendar', icon: CalendarDays },
   { label: 'Reports', to: '/reports', icon: FileText },
+  { label: 'User management', to: '/user-management', icon: UserCog },
   {
     label: 'Settings',
     to: '/settings',
@@ -52,9 +54,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
       { label: 'Opportunity stages', to: '/settings/pipelines' },
       { label: 'Field map configuration', to: '/settings/forms' },
       { label: 'Validations', to: '/settings/validations' },
-      { label: 'Roles and permissions', to: '/settings/roles' },
       { label: 'Reference data' },
-      { label: 'User management' },
       { label: 'Audit log' },
     ],
   },
