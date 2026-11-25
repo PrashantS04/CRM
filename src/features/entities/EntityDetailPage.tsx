@@ -1,13 +1,13 @@
-import { ArrowLeft, Plus } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { usePageCrumb } from '@/app/layout/breadcrumbContext'
 import { NewTaskDialog } from '@/components/NewTaskDialog'
 import { NoteDialog } from '@/components/NoteDialog'
 import { QueryState } from '@/components/feedback/QueryState'
 import { useToast } from '@/components/feedback/toastContext'
 import { ActivityRail, DetailSection, FieldGrid, RecordHeader } from '@/components/record'
-import { ActivityFeed, Badge, Button, Card, RecordLink, RelationshipStatusBadge, Tabs, Timeline, type Column, DataTable } from '@/components/ui'
+import { ActivityFeed, BackLink, Badge, Button, Card, RecordLink, RelationshipStatusBadge, Tabs, Timeline, type Column, DataTable } from '@/components/ui'
 import { usePeople } from '@/features/people/hooks'
 import { detailPath } from '@/features/opportunities/config'
 import { useAllOpportunities } from '@/features/opportunities/hooks'
@@ -95,9 +95,7 @@ export function EntityDetailPage() {
 
         return (
           <>
-            <Link to="/entities" className="text-info mb-3 inline-flex items-center gap-1 text-xs font-bold no-underline hover:underline">
-              <ArrowLeft size={14} /> Back to entities
-            </Link>
+            <BackLink to="/entities">Back to entities</BackLink>
             <RecordHeader
               name={entity.name}
               badge={entity.type}

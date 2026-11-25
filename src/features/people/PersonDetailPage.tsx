@@ -1,6 +1,6 @@
-import { ArrowLeft, Plus } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { usePageCrumb } from '@/app/layout/breadcrumbContext'
 import { CallButton, EmailButton } from '@/components/ContactButtons'
 import { NewTaskDialog } from '@/components/NewTaskDialog'
@@ -8,7 +8,7 @@ import { NoteDialog } from '@/components/NoteDialog'
 import { QueryState } from '@/components/feedback/QueryState'
 import { useToast } from '@/components/feedback/toastContext'
 import { ActivityRail, DetailSection, FieldGrid, RecordHeader } from '@/components/record'
-import { ActivityFeed, Button, Card, RecordLink, RelationshipStatusBadge, Tabs, Timeline } from '@/components/ui'
+import { ActivityFeed, BackLink, Button, Card, RecordLink, RelationshipStatusBadge, Tabs, Timeline } from '@/components/ui'
 import { useEntity } from '@/features/entities/hooks'
 import { detailPath } from '@/features/opportunities/config'
 import { useAllOpportunities } from '@/features/opportunities/hooks'
@@ -99,9 +99,7 @@ export function PersonDetailPage() {
 
         return (
           <>
-            <Link to="/people" className="text-info mb-3 inline-flex items-center gap-1 text-xs font-bold no-underline hover:underline">
-              <ArrowLeft size={14} /> Back to people
-            </Link>
+            <BackLink to="/people">Back to people</BackLink>
             <RecordHeader
               name={p.name}
               badge={p.type}

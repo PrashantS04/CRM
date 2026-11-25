@@ -40,7 +40,9 @@ export function LogoutConfirm({ open, onClose }: LogoutConfirmProps) {
         </>
       }
     >
-      <p className="text-muted m-0 p-[22px] pb-6 text-[13px]">Are you sure you want to log out?</p>
+      <p className="text-muted m-0 p-[22px] pb-6 text-[13px]">
+        Are you sure you want to log out?
+      </p>
     </Modal>
   )
 }

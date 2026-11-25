@@ -1,6 +1,6 @@
-import { ArrowLeft, Plus } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import MenuItem from '@mui/material/MenuItem'
 import Select from '@mui/material/Select'
 import { usePageCrumb } from '@/app/layout/breadcrumbContext'
@@ -8,7 +8,7 @@ import { NewTaskDialog } from '@/components/NewTaskDialog'
 import { QueryState } from '@/components/feedback/QueryState'
 import { useToast } from '@/components/feedback/toastContext'
 import { DetailSection, FieldGrid, RecordHeader } from '@/components/record'
-import { Badge, Button, Card, Tabs, Timeline } from '@/components/ui'
+import { BackLink, Badge, Button, Card, Tabs, Timeline } from '@/components/ui'
 import { FormField } from '@/components/form'
 import { TASK_PRIORITIES, TASK_STATUSES } from '@/constants/lists'
 import { formatDateTime } from '@/lib/format'
@@ -42,9 +42,7 @@ export function TaskDetailPage() {
         const currentStatus = statusOverride ?? task.status
         return (
           <>
-            <Link to="/tasks" className="text-info mb-3 inline-flex items-center gap-1 text-xs font-bold no-underline hover:underline">
-              <ArrowLeft size={14} /> Back to tasks
-            </Link>
+            <BackLink to="/tasks">Back to tasks</BackLink>
             <RecordHeader
               name={task.title}
               badge={task.area}

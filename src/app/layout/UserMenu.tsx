@@ -39,7 +39,7 @@ export function UserMenu() {
         aria-expanded={open}
         className="flex items-center gap-[9px] font-semibold cursor-pointer"
       >
-        <Avatar name={name} />
+        <Avatar name={name} size='lg' />
         {/* <span className="hidden sm:inline">{name}</span>
         <ChevronDown size={16} className="text-muted" aria-hidden /> */}
       </button>

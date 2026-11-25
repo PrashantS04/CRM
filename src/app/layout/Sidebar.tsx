@@ -113,7 +113,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
         )}
       </div>
 
-      <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
+      <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-400">
       {NAV_ITEMS.map((item) => {
         const isActive = pathname === item.to || pathname.startsWith(`${item.to}/`)
         const Icon = item.icon
@@ -129,7 +129,9 @@ export function Sidebar({ onNavigate }: SidebarProps) {
                 isExpanded
                   ? 'gap-[11px] px-[13px] py-3 text-left'
                   : 'mx-auto size-10 justify-center',
-                isActive ? 'bg-brand font-semibold text-white' : 'text-muted hover:bg-surface-alt',
+                isActive
+                  ? 'bg-brand font-semibold text-white'
+                  : 'text-muted hover:bg-brand hover:font-semibold hover:text-white transition-all duration-200',
               )}
               aria-current={isActive ? 'page' : undefined}
             >
@@ -156,7 +158,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
                             'block rounded-md px-2.5 py-2 no-underline',
                             childActive
                               ? 'text-brand bg-brand-tint font-bold'
-                              : 'text-subtle hover:bg-surface-alt',
+                              : 'text-subtle hover:bg-surface-alt hover:text-brand hover:bg-brand-tint hover:font-bold transition-all duration-200',
                           )
                         }
                       >

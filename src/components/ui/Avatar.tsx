@@ -4,6 +4,8 @@ import { getInitials } from '@/lib/format'
 const SIZE = {
   sm: 'size-[27px] text-[10px]',
   md: 'size-[34px] text-xs',
+  lg: 'size-[42px] text-md',
+  xl: 'size-[50px] text-lg',
 } as const
 
 export interface AvatarProps {

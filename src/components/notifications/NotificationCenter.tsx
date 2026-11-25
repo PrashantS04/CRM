@@ -121,7 +121,7 @@ export function NotificationCenter() {
         aria-label={`Notifications, ${UNREAD} unread`}
         className="bg-brand-soft text-brand relative grid size-[36px] cursor-pointer place-items-center rounded-full border-0 shadow-card-sm"
       >
-        <Bell size={15} aria-hidden />
+        <Bell size={20} aria-hidden />
         <span className="border-surface absolute -top-1 -right-[5px] grid min-w-[15px] place-items-center rounded-full border-2 bg-brand px-1 text-[9px] leading-[13px] font-bold text-white">
           {UNREAD}
         </span>

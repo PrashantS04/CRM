@@ -54,8 +54,6 @@ export const NAV_ITEMS: readonly NavItem[] = [
       { label: 'Opportunity stages', to: '/settings/pipelines' },
       { label: 'Field map configuration', to: '/settings/forms' },
       { label: 'Validations', to: '/settings/validations' },
-      { label: 'Reference data' },
-      { label: 'Audit log' },
     ],
   },
 ]
