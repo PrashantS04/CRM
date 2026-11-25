@@ -5,3 +5,9 @@ dist
 .vscode/*
 !.vscode/extensions.json
 .DS_Store
+
+# Environment files
+.env
+.env.*
+!.env.example
+

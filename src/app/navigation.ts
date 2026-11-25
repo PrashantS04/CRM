@@ -1,10 +1,12 @@
 import {
   Banknote,
   Building2,
+  Calendar,
   CheckSquare,
   FileText,
   LayoutDashboard,
   Settings,
+  ShieldCheck,
   TrendingUp,
   Users,
   type LucideIcon,
@@ -18,7 +20,8 @@ export interface SubNavItem {
 
 export interface NavItem {
   label: string
-  to: string
+  /** Omit for items that are listed in the prototype but not built yet. */
+  to?: string
   icon: LucideIcon
   /** Shown only while the parent section is active. */
   children?: readonly SubNavItem[]
@@ -39,6 +42,8 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { label: 'People', to: '/people', icon: Users },
   { label: 'Entities', to: '/entities', icon: Building2 },
   { label: 'Tasks', to: '/tasks', icon: CheckSquare },
+  { label: 'Calendar', icon: Calendar },
+  { label: 'Security holders', icon: ShieldCheck },
   { label: 'Reports', to: '/reports', icon: FileText },
   {
     label: 'Settings',
@@ -46,8 +51,9 @@ export const NAV_ITEMS: readonly NavItem[] = [
     icon: Settings,
     children: [
       { label: 'Opportunity stages', to: '/settings/pipelines' },
-      { label: 'Field map configuration', to: '/settings/forms' },
+      { label: 'Field map and objects', to: '/settings/forms' },
       { label: 'Validations', to: '/settings/validations' },
+      { label: 'Roles and permissions' },
       { label: 'Reference data' },
       { label: 'User management' },
       { label: 'Audit log' },

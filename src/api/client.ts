@@ -4,6 +4,7 @@ import axios, {
   type InternalAxiosRequestConfig,
 } from 'axios'
 import { ApiError, type ApiErrorCode } from './http'
+import { devUser } from './crmClient'
 
 declare module 'axios' {
   export interface AxiosRequestConfig {
@@ -67,6 +68,7 @@ api.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
   }
 
   headers.set('X-Request-Id', createRequestId())
+  headers.set('X-Dev-User', devUser())
 
   // Custom User-Agent detection (e.g. Brave)
   if (typeof navigator !== 'undefined' && navigator.userAgent) {

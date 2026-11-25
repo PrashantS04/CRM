@@ -1,5 +1,5 @@
 import type { ComponentType } from 'react'
-import { Navigate, type RouteObject } from 'react-router-dom'
+import { Navigate, redirect, type RouteObject } from 'react-router-dom'
 import { PageLoader } from '@/components/feedback/PageLoader'
 import { AppShell } from './layout/AppShell'
 import { RouteErrorPage } from './RouteErrorPage'
@@ -115,16 +115,24 @@ export const routes: RouteObject[] = [
           },
         ],
       },
+      // People and Entities are served by the live, metadata-driven records module (CRM-Backend
+      // /api/persons and /api/entities).
       {
         path: 'people',
         handle: { crumb: 'People' },
         children: [
-          { index: true, ...lazyPage(() => import('@/features/people/PeoplePage'), 'PeoplePage') },
+          { index: true, ...lazyPage(() => import('@/features/records/pages'), 'LivePeoplePage') },
           {
             path: ':personId',
-            ...lazyPage(() => import('@/features/people/PersonDetailPage'), 'PersonDetailPage'),
+            ...lazyPage(() => import('@/features/records/pages'), 'LivePersonPage'),
           },
         ],
+      },
+      // Older links used /persons/:id.
+      { path: 'persons', element: <Navigate to="/people" replace /> },
+      {
+        path: 'persons/:personId',
+        loader: ({ params }) => redirect(`/people/${params.personId ?? ''}`),
       },
       {
         path: 'entities',
@@ -132,11 +140,49 @@ export const routes: RouteObject[] = [
         children: [
           {
             index: true,
-            ...lazyPage(() => import('@/features/entities/EntitiesPage'), 'EntitiesPage'),
+            ...lazyPage(() => import('@/features/records/pages'), 'LiveEntitiesPage'),
           },
           {
             path: ':entityId',
-            ...lazyPage(() => import('@/features/entities/EntityDetailPage'), 'EntityDetailPage'),
+            ...lazyPage(() => import('@/features/records/pages'), 'LiveEntityPage'),
+          },
+        ],
+      },
+      // The earlier mock-data People and Entities prototypes, kept reachable until they are retired.
+      {
+        path: 'prototype',
+        handle: { crumb: 'Prototype' },
+        children: [
+          {
+            path: 'people',
+            handle: { crumb: 'People (mock data)' },
+            children: [
+              {
+                index: true,
+                ...lazyPage(() => import('@/features/people/PeoplePage'), 'PeoplePage'),
+              },
+              {
+                path: ':personId',
+                ...lazyPage(() => import('@/features/people/PersonDetailPage'), 'PersonDetailPage'),
+              },
+            ],
+          },
+          {
+            path: 'entities',
+            handle: { crumb: 'Entities (mock data)' },
+            children: [
+              {
+                index: true,
+                ...lazyPage(() => import('@/features/entities/EntitiesPage'), 'EntitiesPage'),
+              },
+              {
+                path: ':entityId',
+                ...lazyPage(
+                  () => import('@/features/entities/EntityDetailPage'),
+                  'EntityDetailPage',
+                ),
+              },
+            ],
           },
         ],
       },
@@ -171,8 +217,13 @@ export const routes: RouteObject[] = [
           },
           {
             path: 'forms',
-            handle: { crumb: 'Field map configuration' },
+            handle: { crumb: 'Field map and objects' },
             ...lazyPage(() => import('@/features/settings/FieldMapPage'), 'FieldMapPage'),
+          },
+          {
+            path: 'setup',
+            handle: { crumb: 'Setup' },
+            ...lazyPage(() => import('@/features/records/setup/SetupPage'), 'SetupPage'),
           },
           {
             path: 'validations',

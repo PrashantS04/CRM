@@ -94,3 +94,148 @@
     -webkit-font-smoothing: antialiased;
   }
 }
+
+/*
+ * Motion. Short, purposeful animations: content fades up as it arrives (staggered with --stagger), dialogs and
+ * menus pop in, sections collapse smoothly, loading rows shimmer. Everything is switched off for users who ask
+ * for reduced motion.
+ */
+@keyframes pi-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes pi-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pi-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes pi-slide-in {
+  from {
+    opacity: 0.4;
+    transform: translateX(32px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes pi-shimmer {
+  from {
+    background-position: -240px 0;
+  }
+  to {
+    background-position: 240px 0;
+  }
+}
+
+@keyframes pi-pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 var(--pi-brand-border);
+  }
+  100% {
+    box-shadow: 0 0 0 8px transparent;
+  }
+}
+
+@layer utilities {
+  .animate-fade-up {
+    animation: pi-fade-up 0.42s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    animation-delay: calc(var(--stagger, 0) * 45ms);
+  }
+
+  .animate-fade {
+    animation: pi-fade 0.3s ease both;
+  }
+
+  .animate-pop {
+    animation: pi-pop 0.22s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  .animate-slide-in {
+    animation: pi-slide-in 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  .animate-pulse-ring {
+    animation: pi-pulse-ring 0.9s ease-out;
+  }
+
+  .skeleton {
+    background: linear-gradient(90deg, var(--pi-line-soft) 0%, var(--pi-surface-alt) 50%, var(--pi-line-soft) 100%);
+    background-size: 480px 100%;
+    animation: pi-shimmer 1.2s linear infinite;
+    border-radius: var(--pi-radius-input);
+  }
+
+  /* Collapsible content: animates its height without measuring (grid rows 0fr <-> 1fr). */
+  .collapse-grid {
+    display: grid;
+    grid-template-rows: 1fr;
+    transition:
+      grid-template-rows 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
+      opacity 0.2s ease;
+  }
+
+  .collapse-grid[data-open='false'] {
+    grid-template-rows: 0fr;
+    opacity: 0;
+  }
+
+  .collapse-grid > * {
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .lift {
+    transition:
+      transform 0.18s ease,
+      box-shadow 0.18s ease,
+      border-color 0.18s ease;
+  }
+
+  .lift:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--pi-shadow-card-hover);
+  }
+
+  /* Hide scrollbar while preserving scroll functionality (LMS-parity) */
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

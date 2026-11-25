@@ -2,12 +2,10 @@ import Drawer from '@mui/material/Drawer'
 import { useMemo, useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import { BreadcrumbContext, type BreadcrumbApi } from './breadcrumbContext'
-import { Sidebar } from './Sidebar'
+import { Sidebar, SIDEBAR_WIDTH } from './Sidebar'
 import { TopBar } from './TopBar'
 
-const SIDEBAR_WIDTH = 248
-
-/** Page frame: fixed sidebar on desktop, slide-over drawer on phones/tablets. */
+/** Page frame: collapsible sidebar on desktop, slide-over drawer on phones/tablets. */
 export function AppShell() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [tail, setTail] = useState<string | null>(null)
@@ -21,23 +19,24 @@ export function AppShell() {
       >
         Skip to content
       </a>
-      {/* minmax(0,1fr) lets the content column shrink so wide children (kanban, tables) scroll inside their own container instead of stretching the page. */}
-      <div className="border-teal grid min-h-screen grid-cols-[minmax(0,1fr)] border-t-[3px] md:grid-cols-[248px_minmax(0,1fr)]">
-        <aside className="bg-surface border-line hidden border-r md:block">
-          <Sidebar />
-        </aside>
+      {/* Flex container allows sidebar to collapse/expand smoothly while the content expands to fill all available width */}
+      <div className="border-teal flex min-h-screen w-full border-t-[3px]">
+        {/* Desktop Collapsible Sidebar */}
+        <Sidebar className="hidden md:flex" />
+
+        {/* Mobile Slide-over Drawer */}
         <Drawer
           open={drawerOpen}
           onClose={() => setDrawerOpen(false)}
           sx={{ display: { md: 'none' } }}
           slotProps={{ paper: { sx: { width: SIDEBAR_WIDTH } } }}
         >
-          <Sidebar onNavigate={() => setDrawerOpen(false)} />
+          <Sidebar isMobile onNavigate={() => setDrawerOpen(false)} />
         </Drawer>
 
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1 flex flex-col">
           <TopBar onMenuClick={() => setDrawerOpen(true)} />
-          <main id="main" className="mx-auto max-w-[1600px] px-5 pt-[30px] pb-[42px] md:px-[34px]">
+          <main id="main" className="mx-auto max-w-[1600px] w-full px-5 pt-[30px] pb-[42px] md:px-[34px] flex-1">
             <Outlet />
           </main>
         </div>
