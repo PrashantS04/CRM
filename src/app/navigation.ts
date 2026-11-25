@@ -56,7 +56,6 @@ export const NAV_ITEMS: readonly NavItem[] = [
     children: [
       { label: 'Opportunity stages', to: '/settings/pipelines' },
       { label: 'Field map and objects', to: '/settings/forms' },
-      { label: 'Setup', to: '/settings/setup' },
       { label: 'Validations', to: '/settings/validations' },
       { label: 'Roles and permissions', to: '/user-management' },
       { label: 'Reference data' },
