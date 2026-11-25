@@ -3,7 +3,7 @@ import MenuItem from '@mui/material/MenuItem'
 import OutlinedInput from '@mui/material/OutlinedInput'
 import Select from '@mui/material/Select'
 import Switch from '@mui/material/Switch'
-import { ArrowDown, ArrowUp, Plus } from 'lucide-react'
+import { ArrowDown, ArrowUp, GripVertical, Plus } from 'lucide-react'
 import { useId, useState } from 'react'
 import { FormField } from '@/components/form'
 import { QueryState } from '@/components/feedback/QueryState'
@@ -24,7 +24,7 @@ import { cn } from '@/lib/cn'
 import type { PipelineDefinition, StageField } from '@/types/domain'
 import { usePipelines } from '@/features/opportunities/hooks'
 import { AddFieldDialog } from './AddFieldDialog'
-import { useAddStage, useMoveStage, useStageFields } from './hooks'
+import { useAddStage, useMoveStage, useReorderStage, useStageFields } from './hooks'
 import { NewPipelineDialog } from './NewPipelineDialog'
 
 const VALIDATION_OPTIONS = ['None', 'Must select a value', 'Maximum 500 characters']
@@ -52,8 +52,23 @@ function StageList({ pipeline, selected, onSelect }: StageListProps) {
   const toast = useToast()
   const addStage = useAddStage()
   const moveStage = useMoveStage()
+  const reorderStage = useReorderStage()
   const [name, setName] = useState('')
+  const [dragIndex, setDragIndex] = useState<number | null>(null)
   const inputId = useId()
+
+  const drop = (to: number) => {
+    if (dragIndex === null || dragIndex === to) {
+      setDragIndex(null)
+      return
+    }
+    const from = dragIndex
+    setDragIndex(null)
+    reorderStage.mutate(
+      { id: pipeline.id, index: from, to },
+      { onSuccess: () => onSelect(to) },
+    )
+  }
 
   const add = async () => {
     const stage = name.trim()
@@ -74,9 +89,15 @@ function StageList({ pipeline, selected, onSelect }: StageListProps) {
         {pipeline.stages.map((stage, index) => (
           <li
             key={`${stage}-${index}`}
+            draggable
+            onDragStart={() => setDragIndex(index)}
+            onDragOver={(event) => event.preventDefault()}
+            onDrop={() => drop(index)}
+            onDragEnd={() => setDragIndex(null)}
             className={cn(
               'border-line grid grid-cols-[1fr_auto] items-center gap-2.5 rounded-lg border p-[13px]',
               index === selected ? 'border-brand bg-brand-tint' : 'bg-surface',
+              dragIndex === index && 'opacity-50',
             )}
           >
             <button
@@ -95,7 +116,8 @@ function StageList({ pipeline, selected, onSelect }: StageListProps) {
                 </small>
               </span>
             </button>
-            <span className="flex gap-1">
+            <span className="flex items-center gap-1">
+              <GripVertical size={15} className="text-subtle cursor-grab" aria-hidden />
               <IconButton
                 size="small"
                 aria-label={`Move ${stage} up`}

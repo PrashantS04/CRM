@@ -1,54 +1,33 @@
 import { Plus } from 'lucide-react'
-import { useState, type ReactNode } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useState } from 'react'
+import { useParams } from 'react-router-dom'
 import { usePageCrumb } from '@/app/layout/breadcrumbContext'
 import { CallButton, EmailButton } from '@/components/ContactButtons'
+import { NewTaskDialog } from '@/components/NewTaskDialog'
+import { NoteDialog } from '@/components/NoteDialog'
 import { QueryState } from '@/components/feedback/QueryState'
 import { useToast } from '@/components/feedback/toastContext'
-import {
-  Button,
-  Card,
-  CardHeader,
-  DataTable,
-  InfoGrid,
-  PageHeader,
-  RecordLayout,
-  RecordLink,
-  RelationshipStatusBadge,
-  RuleItem,
-  SectionLabel,
-  Timeline,
-  type Column,
-} from '@/components/ui'
+import { ActivityRail, DetailSection, FieldGrid, RecordHeader } from '@/components/record'
+import { ActivityFeed, BackLink, Button, Card, RecordLink, RelationshipStatusBadge, Tabs, Timeline } from '@/components/ui'
 import { useEntity } from '@/features/entities/hooks'
-import { NoteDialog } from '@/features/notes/NoteDialog'
 import { detailPath } from '@/features/opportunities/config'
 import { useAllOpportunities } from '@/features/opportunities/hooks'
-import { NewTaskDialog } from '@/features/tasks/NewTaskDialog'
 import { useTasks } from '@/features/tasks/hooks'
 import { getTaskDisplayStatus, isTaskForRecord } from '@/features/tasks/status'
 import { formatDate } from '@/lib/format'
+import type { ActivityItem } from '@/types/domain'
 import { usePerson, usePersonTimeline } from './hooks'
 import { buildMappedPersonFields } from './mappedFields'
 
-interface LinkedRow {
-  id: string
-  block: string
-  record: ReactNode
-  role: string
-  state: string
-}
-
-const LINKED_COLUMNS: Column<LinkedRow>[] = [
-  { key: 'block', header: 'Block', cell: (row) => row.block },
-  { key: 'record', header: 'Linked record', cell: (row) => row.record },
-  { key: 'role', header: 'Role', cell: (row) => row.role },
-  { key: 'state', header: 'Stage or status', cell: (row) => row.state },
-]
+type Tab = 'activity' | 'details' | 'history'
+const TABS = [
+  { value: 'activity', label: 'Activity' },
+  { value: 'details', label: 'Details' },
+  { value: 'history', label: 'History' },
+] as const
 
 export function PersonDetailPage() {
   const { personId = '' } = useParams()
-  const navigate = useNavigate()
   const toast = useToast()
   const personQuery = usePerson(personId)
   const person = personQuery.data
@@ -57,6 +36,7 @@ export function PersonDetailPage() {
   const timeline = usePersonTimeline(personId)
   const tasks = useTasks()
   const opportunities = useAllOpportunities()
+  const [tab, setTab] = useState<Tab>('activity')
   const [taskOpen, setTaskOpen] = useState(false)
   const [noteOpen, setNoteOpen] = useState(false)
   usePageCrumb(person?.name)
@@ -69,178 +49,153 @@ export function PersonDetailPage() {
           (o) => entity && o.party === entity.name,
         )
         const openTasks = (tasks.data ?? []).filter(
-          (t) =>
-            isTaskForRecord(t, p.name, entity?.name) && ['Open', 'In Progress'].includes(t.status),
+          (t) => isTaskForRecord(t, p.name, entity?.name) && ['Open', 'In Progress'].includes(t.status),
         )
-        const linkedRows: LinkedRow[] = [
+        const feedItems: ActivityItem[] = [
+          ...openTasks.map((t) => ({
+            id: t.id,
+            kind: 'task' as const,
+            title: t.title,
+            detail: `Related to ${t.relatedTo} · Due ${formatDate(t.dueAt)}`,
+            meta: `${t.createdBy} · ${t.priority} priority`,
+            status: getTaskDisplayStatus(t),
+            group: 'Upcoming and overdue',
+            alert: getTaskDisplayStatus(t) === 'Overdue',
+          })),
+          ...relatedOpportunities.map((o) => ({
+            id: o.id,
+            kind: 'event' as const,
+            title: `${o.kind === 'loan' ? 'Loan' : 'Investment'} opportunity: ${o.name}`,
+            detail: `Current stage ${o.stage} · Owner ${o.owner}`,
+            meta: `Follow-up ${o.followUpAt ? formatDate(o.followUpAt) : 'not set'}`,
+            status: 'Open',
+            group: 'Related records',
+          })),
+          ...(timeline.data ?? []).map((entry) => ({
+            id: entry.id,
+            kind: (entry.title.startsWith('Call')
+              ? 'call'
+              : entry.title.startsWith('Email')
+                ? 'email'
+                : 'note') as ActivityItem['kind'],
+            title: entry.title,
+            detail: entry.detail,
+            meta: '',
+            status: 'Logged',
+            group: 'Record activity',
+          })),
+        ]
+        const railLinks = [
           ...(entity
-            ? [
-                {
-                  id: 'entity',
-                  block: 'Linked entity',
-                  record: <RecordLink to={`/entities/${entity.id}`}>{entity.name}</RecordLink>,
-                  role: p.roles,
-                  state: entity.status,
-                },
-              ]
+            ? [{ id: 'ent', title: entity.name, description: `${entity.type} · ${entity.relationship}`, to: `/entities/${entity.id}` }]
             : []),
           ...relatedOpportunities.map((o) => ({
             id: o.id,
-            block: 'Linked opportunity',
-            record: <RecordLink to={detailPath(o.kind, o.id)}>{o.name}</RecordLink>,
-            role: p.type,
-            state: o.stage,
+            title: o.name,
+            description: `${o.kind === 'loan' ? 'Loan' : 'Investment'} Opportunity · ${o.stage}`,
+            to: detailPath(o.kind, o.id),
           })),
         ]
-        const entityName = entity?.name
 
         return (
           <>
-            <PageHeader
-              back={{ to: '/people', label: 'Back to people' }}
-              title={p.name}
-              description={`${p.type}${entityName ? ` · ${entityName}` : ''}`}
+            <BackLink to="/people">Back to people</BackLink>
+            <RecordHeader
+              name={p.name}
+              badge={p.type}
+              meta={[
+                { label: 'Owner', value: p.owner },
+                {
+                  label: 'Relationship status',
+                  value: <RelationshipStatusBadge status={p.status} />,
+                },
+              ]}
               actions={
                 <>
                   {p.phone && <CallButton phone={p.phone} />}
                   <EmailButton email={p.email} />
-                  <Button
-                    variant="primary"
-                    startIcon={<Plus size={16} />}
-                    onClick={() => setTaskOpen(true)}
-                  >
+                  <Button variant="primary" startIcon={<Plus size={16} />} onClick={() => setTaskOpen(true)}>
                     Task
                   </Button>
                 </>
               }
             />
-            <RecordLayout
-              aside={
-                <>
-                  <Card padded>
-                    <CardHeader title="Open tasks" />
-                    {openTasks.length === 0 ? (
-                      <p className="text-muted m-0 text-[13px]">No open tasks.</p>
-                    ) : (
-                      openTasks.map((task) => (
-                        <RuleItem
-                          key={task.id}
-                          icon={getTaskDisplayStatus(task) === 'Overdue' ? '!' : '✓'}
-                          title={task.title}
-                          description={`Due ${formatDate(task.dueAt)} · ${task.priority} priority`}
-                        />
-                      ))
-                    )}
-                    <Button sx={{ mt: 2 }} onClick={() => setTaskOpen(true)}>
-                      Assign task
-                    </Button>
-                  </Card>
-                  {p.type === 'Broker' && (
-                    <Card padded>
-                      <CardHeader
-                        title="Broker and panel fields"
-                        description="ACR, ACL, Industry Body and Panel Membership blocks from the field map."
+            <Tabs label="Person sections" value={tab} onChange={setTab} items={TABS} />
+            <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1.92fr)_minmax(310px,0.78fr)]">
+              <div className="grid min-w-0 content-start gap-3">
+                {tab === 'details' && (
+                  <>
+                    <DetailSection title="Person details" onEdit={() => toast.info('Person editor opened')}>
+                      <FieldGrid
+                        items={[
+                          { label: 'Email', value: <RecordLink to={`mailto:${p.email}`}>{p.email}</RecordLink> },
+                          { label: 'Phone', value: p.phone || 'Not entered' },
+                          { label: 'Person type', value: p.type },
+                          { label: 'Relationship status', value: <RelationshipStatusBadge status={p.status} /> },
+                          {
+                            label: 'Primary entity',
+                            value: entity ? <RecordLink to={`/entities/${entity.id}`}>{entity.name}</RecordLink> : 'Not linked',
+                          },
+                          { label: 'Owner', value: p.owner },
+                          { label: 'Roles', value: p.roles },
+                        ]}
                       />
-                      <Button onClick={() => navigate('/settings/forms')}>
-                        View mapped blocks
+                    </DetailSection>
+                    {mapped.map((group) => (
+                      <DetailSection key={group.group} title={group.group} onEdit={() => toast.info('Mapped field editor opened')}>
+                        <FieldGrid items={group.fields} />
+                      </DetailSection>
+                    ))}
+                  </>
+                )}
+                {tab === 'activity' && (
+                  <Card padded>
+                    <div className="flex flex-wrap items-center gap-2 pb-4">
+                      <Button variant="primary" size="small" startIcon={<Plus size={15} />} onClick={() => setTaskOpen(true)}>
+                        New task
                       </Button>
-                    </Card>
-                  )}
-                </>
-              }
-            >
-              <Card padded>
-                <CardHeader
-                  title="Person details"
-                  description="Core identity and relationship information."
-                  action={<Button onClick={() => toast.info('Person editor opened')}>Edit</Button>}
+                      <Button size="small" onClick={() => toast.info('Teams dialler would open')}>
+                        Call
+                      </Button>
+                      <Button size="small" onClick={() => toast.info('Outlook would open')}>
+                        Email
+                      </Button>
+                      <Button size="small" onClick={() => toast.info('Calendar event panel opened')}>
+                        Event
+                      </Button>
+                      <Button size="small" startIcon={<Plus size={15} />} onClick={() => setNoteOpen(true)}>
+                        Add note
+                      </Button>
+                    </div>
+                    <ActivityFeed items={feedItems} />
+                  </Card>
+                )}
+                {tab === 'history' && (
+                  <Card padded>
+                    <QueryState query={timeline}>
+                      {(entries) => <Timeline label="Record history" entries={entries} />}
+                    </QueryState>
+                  </Card>
+                )}
+              </div>
+              <aside className="grid content-start gap-4">
+                <ActivityRail
+                  linksTitle="Linked opportunities"
+                  links={railLinks}
+                  linksCount={railLinks.length}
+                  documents={[{ id: 'd1', title: 'Identity verification', description: 'SharePoint link · added 02 Sep 2026' }]}
+                  onAddDocument={() => toast.info('SharePoint link panel opened')}
+                  onLogCall={p.phone ? undefined : () => toast.info('No phone number on record')}
+                  onEmail={() => toast.info('Outlook would open')}
+                  onNewEvent={() => toast.info('Calendar event panel opened')}
+                  onNote={() => setNoteOpen(true)}
+                  onNewTask={() => setTaskOpen(true)}
+                  activities={feedItems.slice(0, 4)}
                 />
-                <InfoGrid
-                  items={[
-                    {
-                      label: 'Email',
-                      value: <RecordLink to={`mailto:${p.email}`}>{p.email}</RecordLink>,
-                    },
-                    { label: 'Phone', value: p.phone || 'Not entered' },
-                    { label: 'Person type', value: p.type },
-                    {
-                      label: 'Relationship status',
-                      value: <RelationshipStatusBadge status={p.status} />,
-                    },
-                    {
-                      label: 'Primary entity',
-                      value: entity ? (
-                        <RecordLink to={`/entities/${entity.id}`}>{entity.name}</RecordLink>
-                      ) : (
-                        'Not linked'
-                      ),
-                    },
-                    { label: 'Owner', value: p.owner },
-                  ]}
-                />
-              </Card>
-
-              <Card padded>
-                <CardHeader
-                  title="Mapped Person fields"
-                  description="Values organised by the imported Contact field map. Use Edit to maintain the record values."
-                  action={
-                    <Button onClick={() => toast.info('Mapped Person field editor opened')}>
-                      Edit mapped fields
-                    </Button>
-                  }
-                />
-                {mapped.map((group) => (
-                  <div key={group.group}>
-                    <SectionLabel>{group.group}</SectionLabel>
-                    <InfoGrid items={group.fields} />
-                  </div>
-                ))}
-              </Card>
-
-              <Card padded>
-                <CardHeader
-                  title="Linked records"
-                  description="Fields from the mapped related-record blocks."
-                />
-                <DataTable
-                  label="Linked records"
-                  columns={LINKED_COLUMNS}
-                  rows={linkedRows}
-                  getRowId={(row) => row.id}
-                  emptyMessage="No linked records yet."
-                  minWidth={560}
-                />
-              </Card>
-
-              <Card padded>
-                <CardHeader
-                  title="Activity history"
-                  description="Email and call pointers retain metadata only. Notes remain append-only."
-                  action={
-                    <Button startIcon={<Plus size={16} />} onClick={() => setNoteOpen(true)}>
-                      Add note
-                    </Button>
-                  }
-                />
-                <QueryState query={timeline}>
-                  {(entries) => <Timeline label="Activity history" entries={entries} />}
-                </QueryState>
-              </Card>
-            </RecordLayout>
-
-            <NewTaskDialog
-              open={taskOpen}
-              onClose={() => setTaskOpen(false)}
-              relatedTo={p.name}
-              area="People"
-            />
-            <NoteDialog
-              open={noteOpen}
-              onClose={() => setNoteOpen(false)}
-              recordId={p.id}
-              recordName={p.name}
-            />
+              </aside>
+            </div>
+            <NewTaskDialog open={taskOpen} onClose={() => setTaskOpen(false)} relatedTo={p.name} area="People" />
+            <NoteDialog open={noteOpen} onClose={() => setNoteOpen(false)} recordId={p.id} recordName={p.name} />
           </>
         )
       }}

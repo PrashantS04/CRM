@@ -4,11 +4,12 @@ import { Check, ChevronDown, Menu } from 'lucide-react'
 import { Fragment, useContext, useEffect, useRef, useState } from 'react'
 import { useMatches } from 'react-router-dom'
 import { devUser, setDevUser } from '@/api/crmClient'
-import { Avatar } from '@/components/ui/Avatar'
+import { NotificationCenter } from '@/components/notifications/NotificationCenter'
 import { getMe, getUsers } from '@/features/records/api'
 import { crmKeys } from '@/features/records/hooks'
 import { cn } from '@/lib/cn'
 import { BreadcrumbContext } from './breadcrumbContext'
+import { UserMenu } from './UserMenu'
 
 export interface RouteHandle {
   crumb?: string
@@ -19,8 +20,8 @@ export interface TopBarProps {
 }
 
 /**
- * Breadcrumb trail (from route handles + the current record name) and the signed-in user. Until sign-in is wired,
- * development runs as a seeded dev user, switchable here to try each role's permissions.
+ * Breadcrumb trail (from route handles + the current record name), notifications, dev-user switcher,
+ * and user menu with sign-out.
  */
 export function TopBar({ onMenuClick }: TopBarProps) {
   const matches = useMatches()
@@ -34,11 +35,13 @@ export function TopBar({ onMenuClick }: TopBarProps) {
   const qc = useQueryClient()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
+
   useEffect(() => {
     const close = (e: MouseEvent) => ref.current && !ref.current.contains(e.target as Node) && setOpen(false)
     document.addEventListener('mousedown', close)
     return () => document.removeEventListener('mousedown', close)
   }, [])
+
   const name = me.data?.name ?? 'Signing in…'
 
   return (
@@ -56,31 +59,51 @@ export function TopBar({ onMenuClick }: TopBarProps) {
           ))}
         </nav>
       </div>
-      <div ref={ref} className="relative">
-        <button type="button" aria-haspopup="menu" aria-expanded={open}
-          onClick={() => { setOpen((o) => !o); void users.refetch() }}
-          className="hover:bg-canvas flex items-center gap-[9px] rounded-control px-2 py-1 font-semibold transition-colors">
-          <Avatar name={name} />
-          <span className="hidden text-left sm:block">
-            {name}
-            {me.data && <span className="text-subtle block text-[11px] font-normal">{me.data.roles.join(', ').toLowerCase()} · dev user</span>}
-          </span>
-          <ChevronDown size={15} className={cn('text-subtle transition-transform', open && 'rotate-180')} />
-        </button>
-        {open && (
-          <div role="menu" className="border-line bg-surface shadow-dialog animate-pop absolute right-0 z-50 mt-1 w-64 rounded-control border p-1">
-            <p className="text-subtle m-0 px-3 pt-1.5 pb-1 text-[11px] font-bold tracking-wide uppercase">Act as (development)</p>
-            {(users.data ?? []).map((u) => (
-              <button key={u.id} type="button" role="menuitem"
-                onClick={() => { setDevUser(u.id); setOpen(false); void qc.invalidateQueries({ queryKey: ['crm'] }) }}
-                className="hover:bg-canvas flex w-full items-center gap-2 rounded-input px-3 py-2 text-left text-sm">
-                <span className="w-4">{devUser() === u.id && <Check size={15} className="text-brand" />}</span>
-                <span className="flex-1">{u.name}</span>
-                <span className="text-subtle font-mono text-[11px]">{u.id}</span>
-              </button>
-            ))}
-          </div>
-        )}
+
+      <div className="flex items-center gap-3">
+        {/* Development user switch (allows testing Credit, Capital, Standard, and Admin roles) */}
+        <div ref={ref} className="relative">
+          <button
+            type="button"
+            aria-haspopup="menu"
+            aria-expanded={open}
+            onClick={() => {
+              setOpen((o) => !o)
+              void users.refetch()
+            }}
+            className="hover:bg-surface-alt flex items-center gap-1.5 rounded-lg border border-line px-2.5 py-1 text-xs font-medium text-muted transition-colors cursor-pointer"
+          >
+            <span className="bg-brand inline-block size-2 rounded-full" />
+            <span className="hidden sm:inline">Role:</span>
+            <span className="font-semibold text-ink">{name}</span>
+            <ChevronDown size={14} className={cn('text-subtle transition-transform', open && 'rotate-180')} />
+          </button>
+          {open && (
+            <div role="menu" className="border-line bg-surface shadow-dialog animate-pop absolute right-0 z-50 mt-1 w-64 rounded-xl border p-1">
+              <p className="text-subtle m-0 px-3 pt-1.5 pb-1 text-[11px] font-bold tracking-wide uppercase">Act as (development)</p>
+              {(users.data ?? []).map((u) => (
+                <button
+                  key={u.id}
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setDevUser(u.id)
+                    setOpen(false)
+                    void qc.invalidateQueries({ queryKey: ['crm'] })
+                  }}
+                  className="hover:bg-canvas flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm"
+                >
+                  <span className="w-4">{devUser() === u.id && <Check size={15} className="text-brand" />}</span>
+                  <span className="flex-1">{u.name}</span>
+                  <span className="text-subtle font-mono text-[11px]">{u.id}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <NotificationCenter />
+        <UserMenu />
       </div>
     </header>
   )

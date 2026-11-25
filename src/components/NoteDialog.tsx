@@ -3,9 +3,9 @@ import { z } from 'zod'
 import { useToast } from '@/components/feedback/toastContext'
 import { FormTextField } from '@/components/form'
 import { FormDialog } from '@/components/ui'
+import { useAddNote } from '@/hooks/useAddNote'
 import { useZodForm } from '@/hooks/useZodForm'
 import type { ID } from '@/types/domain'
-import { useAddNote } from './hooks'
 
 /** Brief §3.6.1: 32,000+ characters, timestamped, newest first, never deleted. */
 export const MAX_NOTE_LENGTH = 32_000

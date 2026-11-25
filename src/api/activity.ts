@@ -1,6 +1,7 @@
 import { CURRENT_USER } from '@/constants/lists'
 import { formatDateTime } from '@/lib/format'
 import {
+  buildEntityTimeline,
   buildOpportunityActivity,
   buildOpportunityAudit,
   buildPersonTimeline,
@@ -46,6 +47,12 @@ export const activityApi = {
     const person = db.people.find((p) => p.id === id)
     if (!person) return notFound('Person', id)
     return respond([...notesFor(id).map(noteToTimeline), ...buildPersonTimeline(person)])
+  },
+
+  async entityTimeline(id: ID) {
+    const entity = db.entities.find((e) => e.id === id)
+    if (!entity) return notFound('Entity', id)
+    return respond([...notesFor(id).map(noteToTimeline), ...buildEntityTimeline(entity)])
   },
 
   async taskHistory(id: ID) {

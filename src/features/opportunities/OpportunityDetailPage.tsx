@@ -2,6 +2,8 @@ import { CalendarPlus, CheckSquare, Mail, Phone, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { usePageCrumb } from '@/app/layout/breadcrumbContext'
+import { NewTaskDialog } from '@/components/NewTaskDialog'
+import { NoteDialog } from '@/components/NoteDialog'
 import { QueryState } from '@/components/feedback/QueryState'
 import { useToast } from '@/components/feedback/toastContext'
 import {
@@ -20,8 +22,6 @@ import {
   Tabs,
   Timeline,
 } from '@/components/ui'
-import { NoteDialog } from '@/features/notes/NoteDialog'
-import { NewTaskDialog } from '@/features/tasks/NewTaskDialog'
 import { useTasks } from '@/features/tasks/hooks'
 import { getTaskDisplayStatus, isTaskForRecord } from '@/features/tasks/status'
 import { formatCurrency, formatDate, formatDateTime } from '@/lib/format'

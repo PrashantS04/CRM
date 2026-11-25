@@ -39,5 +39,14 @@ export const pipelinesApi = {
     return respond(pipeline)
   },
 
+  /** Moves the stage at `index` to position `to`. */
+  async reorderStage(id: ID, index: number, to: number) {
+    const pipeline = findPipeline(id)
+    const stages = pipeline.stages
+    const [stage] = stages.splice(index, 1)
+    if (stage !== undefined) stages.splice(Math.min(to, stages.length), 0, stage)
+    return respond(pipeline)
+  },
+
   stageFields: (): Promise<StageField[]> => respond(DEFAULT_STAGE_FIELDS),
 }

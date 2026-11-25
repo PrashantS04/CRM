@@ -1,6 +1,7 @@
 import { Plus } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { NewTaskDialog } from '@/components/NewTaskDialog'
 import { QueryState } from '@/components/feedback/QueryState'
 import {
   Badge,
@@ -18,7 +19,6 @@ import { uniqueSorted } from '@/lib/collections'
 import { formatDateTime } from '@/lib/format'
 import type { Task } from '@/types/domain'
 import { useTasks } from './hooks'
-import { NewTaskDialog } from './NewTaskDialog'
 import { getTaskDisplayStatus, TASK_STATUS_TONE } from './status'
 
 type StatusFilter = 'active' | 'overdue' | 'completed' | 'all'

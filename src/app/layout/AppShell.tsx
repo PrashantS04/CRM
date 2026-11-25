@@ -1,5 +1,5 @@
 import Drawer from '@mui/material/Drawer'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import { BreadcrumbContext, type BreadcrumbApi } from './breadcrumbContext'
 import { Sidebar, SIDEBAR_WIDTH } from './Sidebar'
@@ -9,7 +9,22 @@ import { TopBar } from './TopBar'
 export function AppShell() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [tail, setTail] = useState<string | null>(null)
+  const [sidebarExpanded, setSidebarExpanded] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('crm_sidebar_open') ?? 'true') as boolean
+    } catch {
+      return true
+    }
+  })
   const breadcrumbs = useMemo<BreadcrumbApi>(() => ({ tail, setTail }), [tail])
+
+  useEffect(() => {
+    const handleToggle = (event: Event) => {
+      setSidebarExpanded((event as CustomEvent<boolean>).detail)
+    }
+    window.addEventListener('sidebar-toggle', handleToggle)
+    return () => window.removeEventListener('sidebar-toggle', handleToggle)
+  }, [])
 
   return (
     <BreadcrumbContext.Provider value={breadcrumbs}>
@@ -19,12 +34,19 @@ export function AppShell() {
       >
         Skip to content
       </a>
-      {/* Flex container allows sidebar to collapse/expand smoothly while the content expands to fill all available width */}
-      <div className="border-teal flex min-h-screen w-full border-t-[3px]">
-        {/* Desktop Collapsible Sidebar */}
-        <Sidebar className="hidden md:flex" />
 
-        {/* Mobile Slide-over Drawer */}
+      {/* minmax(0,1fr) lets the content column shrink so wide children (kanban, tables) scroll inside their own container instead of stretching the page. */}
+      <div
+        className={`border-teal grid h-screen grid-rows-[minmax(0,1fr)] grid-cols-[minmax(0,1fr)] overflow-hidden border-t-[3px] transition-[grid-template-columns] duration-300 ease-in-out ${
+          sidebarExpanded
+            ? 'md:grid-cols-[248px_minmax(0,1fr)]'
+            : 'md:grid-cols-[64px_minmax(0,1fr)]'
+        }`}
+      >
+        <aside className="bg-surface border-line sticky top-0 hidden h-screen border-r md:block">
+          <Sidebar />
+        </aside>
+
         <Drawer
           open={drawerOpen}
           onClose={() => setDrawerOpen(false)}
@@ -34,7 +56,7 @@ export function AppShell() {
           <Sidebar isMobile onNavigate={() => setDrawerOpen(false)} />
         </Drawer>
 
-        <div className="min-w-0 flex-1 flex flex-col">
+        <div className="min-w-0 min-h-0 overflow-y-auto flex flex-col flex-1">
           <TopBar onMenuClick={() => setDrawerOpen(true)} />
           <main id="main" className="mx-auto max-w-[1600px] w-full px-5 pt-[30px] pb-[42px] md:px-[34px] flex-1">
             <Outlet />

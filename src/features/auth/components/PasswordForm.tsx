@@ -1,23 +1,35 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Check } from 'lucide-react'
 import { Checkbox, TextField } from '@/components/form'
 import { Button } from '@/components/ui'
-import { getPendingUsername } from '../pendingSignIn'
+import { useToast } from '@/components/feedback/toastContext'
+import {
+  confirmNewPasswordChallenge,
+  signInWithUsernamePassword,
+} from '@/sso/config'
+import { getAuthErrorMessage } from '../authErrors'
+import { completeAuthenticatedSession } from '../completeAuthSession'
+import {
+  clearPendingUsername,
+  getPendingUsername,
+} from '../pendingSignIn'
 import AuthCard from './AuthCard'
 
 const PasswordForm = () => {
   const navigate = useNavigate()
   const location = useLocation()
+  const { error: showError, success: showSuccess } = useToast()
 
   const username =
     (location.state as { username?: string } | null)?.username || getPendingUsername()
 
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
 
-  // New password challenge UI state
+  // New password challenge state
   const [needsNewPassword, setNeedsNewPassword] = useState(false)
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -29,7 +41,15 @@ const PasswordForm = () => {
   const [passwordError, setPasswordError] = useState('')
   const [newPasswordError, setNewPasswordError] = useState('')
   const [confirmPasswordError, setConfirmPasswordError] = useState('')
+  const [familyNameError, setFamilyNameError] = useState('')
+  const [givenNameError, setGivenNameError] = useState('')
   const [preferredUsernameError, setPreferredUsernameError] = useState('')
+
+  useEffect(() => {
+    if (!username) {
+      navigate('/', { replace: true })
+    }
+  }, [navigate, username])
 
   // Live password policy checks
   const passwordCriteria = [
@@ -59,52 +79,133 @@ const PasswordForm = () => {
       isValid: /[^A-Za-z0-9]/.test(newPassword),
     },
   ]
-  // const allCriteriaMet = passwordCriteria.every((c) => c.isValid)
+  const allCriteriaMet = passwordCriteria.every((c) => c.isValid)
 
-  const handleContinue = (event: FormEvent) => {
-    event.preventDefault()
-    // if (!password) {
-    //   setPasswordError('Please enter your password.')
-    //   return
-    // }
-    // setPasswordError('')
-    navigate('/dashboard')
+  const finishSignIn = async () => {
+    await completeAuthenticatedSession()
+    clearPendingUsername()
+    navigate('/dashboard', { replace: true })
   }
 
-  const handleNewPassword = (event: FormEvent) => {
+  const handleContinue = async (event: FormEvent) => {
     event.preventDefault()
-    navigate('/dashboard')
+    if (isLoading) return
 
-    // let hasError = false
-    //
-    // if (!newPassword) {
-    //   setNewPasswordError('Please enter your new password.')
-    //   hasError = true
-    // } else if (!allCriteriaMet) {
-    //   setNewPasswordError('Password does not meet the required policy.')
-    //   hasError = true
-    // } else {
-    //   setNewPasswordError('')
-    // }
-    //
-    // if (!confirmPassword) {
-    //   setConfirmPasswordError('Please confirm your new password.')
-    //   hasError = true
-    // } else if (newPassword !== confirmPassword) {
-    //   setConfirmPasswordError('Passwords do not match.')
-    //   hasError = true
-    // } else {
-    //   setConfirmPasswordError('')
-    // }
-    //
-    // if (!preferredUsername.trim()) {
-    //   setPreferredUsernameError('Please enter your preferred username.')
-    //   hasError = true
-    // } else {
-    //   setPreferredUsernameError('')
-    // }
-    //
-    // if (hasError) return
+    if (!password) {
+      setPasswordError('Please enter your password.')
+      return
+    }
+    setPasswordError('')
+
+    setIsLoading(true)
+    try {
+      const output = await signInWithUsernamePassword(username, password)
+      const step = output?.nextStep?.signInStep
+
+      if (output?.isSignedIn || step === 'DONE') {
+        await finishSignIn()
+        return
+      }
+
+      if (step === 'CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED') {
+        setNeedsNewPassword(true)
+        return
+      }
+
+      if (step === 'RESET_PASSWORD') {
+        navigate('/forgot-password', { state: { username } })
+        showError('You must reset your password before signing in.')
+        return
+      }
+
+      showError('Additional verification is required. Please contact support.')
+    } catch (error) {
+      if ((error as { name?: string })?.name === 'PasswordResetRequiredException') {
+        navigate('/forgot-password', { state: { username } })
+      }
+      showError(getAuthErrorMessage(error))
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleNewPassword = async (event: FormEvent) => {
+    event.preventDefault()
+    if (isLoading) return
+
+    let hasError = false
+
+    // 1. New password validation
+    if (!newPassword) {
+      setNewPasswordError('Please enter your new password.')
+      hasError = true
+    } else if (!allCriteriaMet) {
+      setNewPasswordError('Password does not meet the required policy.')
+      hasError = true
+    } else {
+      setNewPasswordError('')
+    }
+
+    // 2. Confirm password validation
+    if (!confirmPassword) {
+      setConfirmPasswordError('Please confirm your new password.')
+      hasError = true
+    } else if (newPassword !== confirmPassword) {
+      setConfirmPasswordError('Passwords do not match.')
+      hasError = true
+    } else {
+      setConfirmPasswordError('')
+    }
+
+    // 3. Family name (optional)
+    setFamilyNameError('')
+
+    // 4. Given name (optional)
+    setGivenNameError('')
+
+    // 5. Preferred username validation (Required)
+    if (!preferredUsername.trim()) {
+      setPreferredUsernameError('Please enter your preferred username.')
+      hasError = true
+    } else {
+      setPreferredUsernameError('')
+    }
+
+    if (hasError) return
+
+    setIsLoading(true)
+    try {
+      const computedFullName =
+        `${givenName.trim()} ${familyName.trim()}`.trim() ||
+        preferredUsername.trim() ||
+        username
+
+      const userAttributesPayload: Record<string, string> = {
+        name: computedFullName,
+      }
+      if (familyName.trim()) userAttributesPayload.family_name = familyName.trim()
+      if (givenName.trim()) userAttributesPayload.given_name = givenName.trim()
+      if (preferredUsername.trim()) {
+        userAttributesPayload.preferred_username = preferredUsername.trim()
+      }
+
+      const output = await confirmNewPasswordChallenge(
+        newPassword,
+        userAttributesPayload,
+      )
+
+      if (output?.isSignedIn || output?.nextStep?.signInStep === 'DONE') {
+        showSuccess('Password changed successfully.')
+        await finishSignIn()
+        return
+      }
+
+      showError('Unable to complete sign in. Please try again.')
+    } catch (error) {
+      showError(getAuthErrorMessage(error))
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleBack = () => {
@@ -116,11 +217,15 @@ const PasswordForm = () => {
       setConfirmPassword('')
       setNewPasswordError('')
       setConfirmPasswordError('')
+      setFamilyNameError('')
+      setGivenNameError('')
       setPreferredUsernameError('')
     } else {
       navigate('/')
     }
   }
+
+  if (!username) return null
 
   return (
     <AuthCard
@@ -271,76 +376,78 @@ const PasswordForm = () => {
               label="Family name"
               size="sm"
               type="text"
+              autoComplete="family-name"
               value={familyName}
               placeholder="Enter your family name or last name"
               onChange={(event) => {
                 setFamilyName(event.target.value)
+                setFamilyNameError('')
               }}
+              error={familyNameError}
               containerClassName="mb-2"
             />
 
             {/* 4. Given name */}
-            <div className="mb-2">
-              <label
-                htmlFor="given-name"
-                className="mb-1 block text-xs font-semibold text-ink"
-              >
-                Given name
-              </label>
-              <input
-                id="given-name"
-                name="given-name"
-                type="text"
-                value={givenName}
-                placeholder="Enter your given name or first name"
-                onChange={(event) => {
-                  setGivenName(event.target.value)
-                }}
-                className="h-9 w-full rounded-md border border-line-strong px-3 text-sm text-ink outline-none placeholder:text-muted focus:border-brand focus:ring-1 focus:ring-brand"
-              />
-            </div>
+            <TextField
+              id="given-name"
+              name="given-name"
+              label="Given name"
+              size="sm"
+              type="text"
+              autoComplete="given-name"
+              value={givenName}
+              placeholder="Enter your given name or first name"
+              onChange={(event) => {
+                setGivenName(event.target.value)
+                setGivenNameError('')
+              }}
+              error={givenNameError}
+              containerClassName="mb-2"
+            />
 
             {/* 5. Preferred username */}
-            <div className="mb-3.5">
-              <label
-                htmlFor="preferred-username"
-                className="mb-1 block text-xs font-semibold text-ink"
-              >
-                Preferred username <span className="text-brand">*</span>
-              </label>
-              <input
-                id="preferred-username"
-                name="preferred-username"
-                type="text"
-                autoComplete="username"
-                value={preferredUsername}
-                placeholder="Enter your preferred username"
-                onChange={(event) => {
-                  setPreferredUsername(event.target.value)
-                  setPreferredUsernameError('')
-                }}
-                className={`h-9 w-full rounded-md border px-3 text-sm text-ink outline-none placeholder:text-muted focus:border-brand focus:ring-1 focus:ring-brand ${
-                  preferredUsernameError ? 'border-brand' : 'border-line-strong'
-                }`}
-              />
-              {preferredUsernameError && (
-                <p className="mt-0.5 text-[11px] text-brand">
-                  {preferredUsernameError}
-                </p>
-              )}
-            </div>
+            <TextField
+              id="preferred-username"
+              name="preferred-username"
+              label="Preferred username"
+              required
+              size="sm"
+              type="text"
+              autoComplete="username"
+              value={preferredUsername}
+              placeholder="Enter your preferred username"
+              onChange={(event) => {
+                setPreferredUsername(event.target.value)
+                setPreferredUsernameError('')
+              }}
+              error={preferredUsernameError}
+              containerClassName="mb-3.5"
+            />
           </>
         )}
 
         <button
           type="submit"
-          className="mb-2 flex h-10 w-full items-center justify-center rounded-md bg-brand text-sm font-semibold text-white transition hover:bg-brand-dark"
+          disabled={isLoading}
+          className={`mb-2 flex h-10 w-full items-center justify-center rounded-md bg-brand text-sm font-semibold text-white transition ${
+            isLoading ? 'cursor-not-allowed opacity-75' : 'hover:bg-brand-dark'
+          }`}
         >
-          {needsNewPassword ? 'Change password' : 'Continue'}
+          {isLoading ? (
+            <span className="flex items-center">
+              <span className="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white" />
+              {needsNewPassword ? 'Changing password...' : 'Signing in...'}
+            </span>
+          ) : needsNewPassword ? (
+            'Change password'
+          ) : (
+            'Continue'
+          )}
         </button>
 
         <button
           type="button"
+          disabled={isLoading}
           onClick={handleBack}
           className="flex h-10 w-full items-center justify-center rounded-md border border-brand bg-white text-sm font-semibold text-brand transition hover:bg-brand-tint"
         >

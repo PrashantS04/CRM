@@ -1,5 +1,6 @@
 export { ActivityFeed } from './ActivityFeed'
 export { Avatar } from './Avatar'
+export { BackLink } from './BackLink'
 export { Badge, type BadgeTone } from './Badge'
 export { Button, ButtonLink, type ButtonVariant } from './Button'
 export { Callout } from './Callout'

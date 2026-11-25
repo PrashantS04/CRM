@@ -1,8 +1,11 @@
-import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { ChevronLeft, ChevronRight, LogOut } from 'lucide-react'
+import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { cn } from '@/lib/cn'
 import { NAV_ITEMS } from '../navigation'
+import { LogoutConfirm } from './LogoutConfirm'
+
+const STORAGE_KEY = 'crm_sidebar_open'
 
 export const SIDEBAR_WIDTH = 248
 export const SIDEBAR_COLLAPSED = 64
@@ -16,7 +19,6 @@ export interface SidebarProps {
 }
 
 interface TooltipState {
-  visible: boolean
   text: string
   top: number
   left: number
@@ -25,275 +27,246 @@ interface TooltipState {
 /** Logo, primary navigation and (for the active section) its sub-navigation, with LMS-style toggle. */
 export function Sidebar({ onNavigate, isMobile = false, className }: SidebarProps) {
   const { pathname } = useLocation()
-
-  // Open state persisted to localStorage, default to true
-  const [open, setOpen] = useState<boolean>(() => {
-    if (isMobile) return true
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [open, setOpen] = useState(() => {
     try {
-      const stored = localStorage.getItem('pi_sidebar_open')
-      if (stored !== null) return JSON.parse(stored)
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'true') as boolean
     } catch {
-      // fallback
+      return true
     }
-    return true
   })
-
   const [hoverExpanded, setHoverExpanded] = useState(false)
-  const [tooltip, setTooltip] = useState<TooltipState>({
-    visible: false,
-    text: '',
-    top: 0,
-    left: 0,
-  })
+  const [tooltip, setTooltip] = useState<TooltipState | null>(null)
+  const navRef = useRef<HTMLElement | null>(null)
+  const openRef = useRef(open)
 
-  const isExpanded = isMobile || open || hoverExpanded
+  // When rendered inside the mobile drawer it is always expanded and never
+  // drives the desktop layout width.
+  const isDrawer = isMobile || onNavigate !== undefined
+  const isExpanded = isDrawer || open || hoverExpanded
 
-  // Persist open state
   useEffect(() => {
-    if (!isMobile) {
+    if (isDrawer) return
+    window.dispatchEvent(new CustomEvent('sidebar-toggle', { detail: isExpanded }))
+  }, [isExpanded, isDrawer])
+
+  useEffect(() => {
+    openRef.current = open
+  }, [open])
+
+  useEffect(() => {
+    if (!isDrawer) {
       try {
-        localStorage.setItem('pi_sidebar_open', JSON.stringify(open))
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(open))
       } catch {
-        // ignore
+        // ignore storage errors
       }
     }
-  }, [open, isMobile])
+  }, [open, isDrawer])
 
-  // Dispatch custom event for external listeners
   useEffect(() => {
-    if (!isMobile) {
-      window.dispatchEvent(new CustomEvent('sidebar-toggle', { detail: isExpanded }))
+    if (isDrawer) return
+    const el = navRef.current
+    if (!el) return
+    const handleEnter = () => {
+      if (!openRef.current) setHoverExpanded(true)
     }
-  }, [isExpanded, isMobile])
-
-  // Responsive: collapse on screen resize below 1024px
-  useEffect(() => {
-    if (isMobile) return
-    const handleResize = () => {
-      if (window.innerWidth < 1024) {
-        setOpen(false)
-      }
+    const handleLeave = () => setHoverExpanded(false)
+    el.addEventListener('mouseenter', handleEnter)
+    el.addEventListener('mouseleave', handleLeave)
+    return () => {
+      el.removeEventListener('mouseenter', handleEnter)
+      el.removeEventListener('mouseleave', handleLeave)
     }
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [isMobile])
+  }, [isDrawer])
 
-  const showTooltip = (e: React.MouseEvent<HTMLElement>, text: string) => {
-    if (isExpanded && text !== 'Collapse sidebar' && text !== 'Expand sidebar') return
-    const rect = e.currentTarget.getBoundingClientRect()
-    setTooltip({
-      visible: true,
-      text,
-      top: rect.top + rect.height / 2,
-      left: rect.right + 12,
-    })
+  const showTooltip = (event: ReactMouseEvent<HTMLElement>, text: string) => {
+    if (isExpanded && text !== 'Collapse' && text !== 'Expand') return
+    const rect = event.currentTarget.getBoundingClientRect()
+    setTooltip({ text, top: rect.top + rect.height / 2, left: rect.right + 12 })
   }
-
-  const hideTooltip = () => {
-    setTooltip((prev) => ({ ...prev, visible: false }))
-  }
-
-  const handleMouseEnter = () => {
-    if (!isMobile && !open) {
-      setHoverExpanded(true)
-      hideTooltip()
-    }
-  }
-
-  const handleMouseLeave = () => {
-    if (!isMobile && !open) {
-      setHoverExpanded(false)
-      hideTooltip()
-    }
-  }
+  const hideTooltip = () => setTooltip(null)
 
   return (
-    <div
+    <nav
+      ref={navRef}
+      aria-label="Primary"
       className={cn(
-        'relative shrink-0 select-none transition-all duration-300 ease-in-out',
-        isMobile ? 'h-full w-[248px]' : 'sticky top-0 z-30 h-screen overflow-visible',
+        'relative flex h-full flex-col py-6 transition-[padding] duration-300',
+        isExpanded ? 'px-[13px]' : 'px-2',
         className,
       )}
-      style={{
-        width: isMobile ? SIDEBAR_WIDTH : isExpanded ? SIDEBAR_WIDTH : SIDEBAR_COLLAPSED,
-      }}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
     >
-      {/* Round Toggle Button on right border (LMS-style) */}
-      {!isMobile && (
+      {!isDrawer && (
         <button
           type="button"
-          onClick={(e) => {
-            e.stopPropagation()
-            setOpen((prev) => !prev)
-          }}
-          onMouseEnter={(e) => showTooltip(e, open ? 'Collapse sidebar' : 'Expand sidebar')}
+          onClick={() => setOpen((prev) => !prev)}
+          onMouseEnter={(event) => showTooltip(event, open ? 'Collapse' : 'Expand')}
           onMouseLeave={hideTooltip}
           aria-label={open ? 'Collapse sidebar' : 'Expand sidebar'}
-          className="border-line bg-surface shadow-card hover:bg-surface-alt text-muted hover:text-ink absolute top-1/2 right-0 z-50 hidden size-8 -translate-y-1/2 translate-x-1/2 cursor-pointer items-center justify-center rounded-full border transition-all duration-200 hover:scale-110 md:flex"
+          className="bg-surface border-line absolute top-1/2 right-0 z-20 hidden size-9 -translate-y-1/2 translate-x-1/2 items-center justify-center rounded-full border shadow-md transition-all duration-300 md:flex cursor-pointer"
         >
-          {open ? <ChevronLeft className="size-4" /> : <ChevronRight className="size-4" />}
+          {open ? <ChevronLeft size={16} aria-hidden /> : <ChevronRight size={16} aria-hidden />}
         </button>
       )}
 
-      {/* Sidebar Content Panel */}
-      <aside
-        aria-label="Sidebar"
-        className="bg-surface border-line flex h-full w-full flex-col border-r transition-all duration-300 ease-in-out no-scrollbar overflow-hidden"
+      {/* Brand Logo */}
+      <div
+        className={cn(
+          'pb-[29px]',
+          isExpanded ? 'text-ink px-2.5 text-[22px] font-extrabold tracking-tight' : 'flex justify-center',
+        )}
       >
-        <nav
-          aria-label="Primary"
+        {isExpanded ? (
+          <div className="flex items-center gap-2">
+            <span aria-hidden className="bg-brand inline-block size-3.5 shrink-0 rounded-sm" />
+            <span className="truncate">PrivateInvest</span>
+          </div>
+        ) : (
+          <div
+            className="flex items-center justify-center cursor-pointer"
+            onMouseEnter={(e) => showTooltip(e, 'PrivateInvest')}
+            onMouseLeave={hideTooltip}
+          >
+            <span aria-hidden className="bg-brand block size-6 rounded-sm" />
+          </div>
+        )}
+      </div>
+
+      {/* Navigation List */}
+      <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-400">
+        {NAV_ITEMS.map((item) => {
+          const isActive = item.to
+            ? pathname === item.to || pathname.startsWith(`${item.to}/`)
+            : false
+          const Icon = item.icon
+
+          return (
+            <div key={item.label}>
+              {item.to ? (
+                <NavLink
+                  to={item.to}
+                  onClick={onNavigate}
+                  onMouseEnter={(event) => showTooltip(event, item.label)}
+                  onMouseLeave={hideTooltip}
+                  className={cn(
+                    'my-0.5 flex w-full items-center rounded-lg no-underline transition-all duration-200',
+                    isExpanded
+                      ? 'gap-[11px] px-[13px] py-3 text-left'
+                      : 'mx-auto size-10 justify-center',
+                    isActive
+                      ? 'bg-brand font-semibold text-white'
+                      : 'text-muted hover:bg-brand-tint hover:font-semibold hover:text-brand transition-all duration-200',
+                  )}
+                  aria-current={isActive ? 'page' : undefined}
+                >
+                  <Icon size={19} aria-hidden className="shrink-0" />
+                  <span
+                    className={cn(
+                      'transition-all duration-200 truncate',
+                      isExpanded ? 'opacity-100' : 'max-w-0 overflow-hidden whitespace-nowrap opacity-0',
+                    )}
+                  >
+                    {item.label}
+                  </span>
+                </NavLink>
+              ) : (
+                <div
+                  title={isExpanded ? 'Coming soon' : undefined}
+                  onMouseEnter={(event) => showTooltip(event, `${item.label} (Coming soon)`)}
+                  onMouseLeave={hideTooltip}
+                  className={cn(
+                    'my-0.5 flex w-full cursor-not-allowed items-center rounded-lg text-muted opacity-60 transition-all duration-200',
+                    isExpanded
+                      ? 'gap-[11px] px-[13px] py-3 text-left'
+                      : 'mx-auto size-10 justify-center',
+                  )}
+                >
+                  <Icon size={19} aria-hidden className="shrink-0" />
+                  <span
+                    className={cn(
+                      'transition-all duration-200 truncate',
+                      isExpanded ? 'opacity-100' : 'max-w-0 overflow-hidden whitespace-nowrap opacity-0',
+                    )}
+                  >
+                    {item.label}
+                  </span>
+                </div>
+              )}
+
+              {/* Sub-navigation for active section with children */}
+              {isExpanded && isActive && item.children && (
+                <ul className="border-line-soft m-0 mt-[5px] mb-3 ml-[23px] list-none border-l p-0 pl-2">
+                  {item.children.map((child) =>
+                    child.to ? (
+                      <li key={child.label}>
+                        <NavLink
+                          to={child.to}
+                          onClick={onNavigate}
+                          className={({ isActive: childActive }) =>
+                            cn(
+                              'block rounded-md px-2.5 py-2 no-underline text-xs transition-colors',
+                              childActive
+                                ? 'text-brand bg-brand-tint font-bold'
+                                : 'text-subtle hover:bg-surface-alt hover:text-brand hover:bg-brand-tint hover:font-bold transition-all duration-200',
+                            )
+                          }
+                        >
+                          {child.label}
+                        </NavLink>
+                      </li>
+                    ) : (
+                      <li key={child.label}>
+                        <span
+                          aria-disabled="true"
+                          title="Not built yet"
+                          className="text-subtle block cursor-not-allowed rounded-md px-2.5 py-2 text-xs opacity-60"
+                        >
+                          {child.label}
+                        </span>
+                      </li>
+                    ),
+                  )}
+                </ul>
+              )}
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Logout button */}
+      <div className="border-line-soft border-t pt-2">
+        <button
+          type="button"
+          onClick={() => setConfirmOpen(true)}
+          onMouseEnter={(event) => showTooltip(event, 'Logout')}
+          onMouseLeave={hideTooltip}
           className={cn(
-            'flex h-full flex-col overflow-y-auto overflow-x-hidden no-scrollbar transition-all duration-200',
-            isExpanded ? 'px-[13px] py-4' : 'px-2 py-4',
+            'text-muted hover:bg-surface-alt my-0.5 flex w-full items-center rounded-lg no-underline transition-all duration-200 font-semibold cursor-pointer hover:bg-brand-tint hover:text-brand',
+            isExpanded ? 'gap-[11px] px-[13px] py-3 text-left' : 'mx-auto size-10 justify-center',
           )}
         >
-          {/* Logo */}
-          <div className="pb-4">
-            {isExpanded ? (
-              <div className="text-ink flex items-center gap-2 px-2.5 text-[22px] font-extrabold tracking-tight">
-                <span aria-hidden className="bg-brand inline-block size-3.5 shrink-0 rounded-sm" />
-                <span className="truncate">PrivateInvest</span>
-              </div>
-            ) : (
-              <div
-                className="flex items-center justify-center py-1 cursor-pointer"
-                onMouseEnter={(e) => showTooltip(e, 'PrivateInvest')}
-                onMouseLeave={hideTooltip}
-              >
-                <span aria-hidden className="bg-brand inline-block size-4 shrink-0 rounded-sm" />
-              </div>
-            )}
-          </div>
+          {isExpanded ? (
+            <>
+              <LogOut size={19} aria-hidden className="shrink-0" />
+              <span>Logout</span>
+            </>
+          ) : (
+            <LogOut size={19} aria-hidden />
+          )}
+        </button>
+      </div>
 
-          {/* Navigation Items */}
-          <div className="flex-1 space-y-0.5">
-            {NAV_ITEMS.map((item) => {
-              const isActive = item.to
-                ? pathname === item.to || pathname.startsWith(`${item.to}/`)
-                : false
-              const Icon = item.icon
-
-              return (
-                <div key={item.label}>
-                  {item.to ? (
-                    <NavLink
-                      to={item.to}
-                      onClick={onNavigate}
-                      onMouseEnter={(e) => showTooltip(e, item.label)}
-                      onMouseLeave={hideTooltip}
-                      className={cn(
-                        'my-0.5 flex w-full items-center rounded-lg text-sm no-underline transition-all duration-200',
-                        isExpanded
-                          ? 'gap-[11px] px-[13px] py-2 text-left'
-                          : 'size-10 justify-center px-0 mx-auto text-center',
-                        isActive
-                          ? 'bg-brand font-semibold text-white'
-                          : 'text-muted hover:bg-surface-alt',
-                      )}
-                      aria-current={isActive ? 'page' : undefined}
-                    >
-                      <Icon size={19} className="shrink-0" aria-hidden />
-                      <span className={cn('truncate', !isExpanded && 'sr-only')}>
-                        {item.label}
-                      </span>
-                    </NavLink>
-                  ) : (
-                    <div
-                      title={isExpanded ? 'Coming soon' : undefined}
-                      onMouseEnter={(e) => showTooltip(e, `${item.label} (Coming soon)`)}
-                      onMouseLeave={hideTooltip}
-                      className={cn(
-                        'my-0.5 flex w-full cursor-not-allowed items-center rounded-lg text-sm text-muted opacity-60 transition-all duration-200',
-                        isExpanded
-                          ? 'gap-[11px] px-[13px] py-2 text-left'
-                          : 'size-10 justify-center px-0 mx-auto text-center',
-                      )}
-                    >
-                      <Icon size={19} className="shrink-0" aria-hidden />
-                      <span className={cn('truncate', !isExpanded && 'sr-only')}>
-                        {item.label}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Sub-navigation for active section with children */}
-                  {isActive && item.children && isExpanded && (
-                    <ul className="border-line-soft m-0 mt-[3px] mb-2 ml-[23px] list-none border-l p-0 pl-2 space-y-0.5">
-                      {item.children.map((child) =>
-                        child.to ? (
-                          <li key={child.label}>
-                            <NavLink
-                              to={child.to}
-                              onClick={onNavigate}
-                              className={({ isActive: childActive }) =>
-                                cn(
-                                  'block rounded-md px-2.5 py-1.5 text-xs no-underline transition-colors',
-                                  childActive
-                                    ? 'text-brand bg-brand-tint font-bold'
-                                    : 'text-subtle hover:bg-surface-alt',
-                                )
-                              }
-                            >
-                              {child.label}
-                            </NavLink>
-                          </li>
-                        ) : (
-                          <li key={child.label}>
-                            <span
-                              aria-disabled="true"
-                              title="Not built yet"
-                              className="text-subtle block cursor-not-allowed rounded-md px-2.5 py-1.5 text-xs opacity-60"
-                            >
-                              {child.label}
-                            </span>
-                          </li>
-                        ),
-                      )}
-                    </ul>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-
-          {/* System status at bottom */}
-          <div className="mt-auto pt-2">
-            {isExpanded ? (
-              <div className="text-subtle flex items-center p-2.5 text-xs">
-                <span
-                  aria-hidden
-                  className="bg-success mr-1.5 inline-block size-[7px] shrink-0 rounded-full"
-                />
-                <span className="truncate">System connected</span>
-              </div>
-            ) : (
-              <div
-                className="flex items-center justify-center py-2"
-                onMouseEnter={(e) => showTooltip(e, 'System connected')}
-                onMouseLeave={hideTooltip}
-              >
-                <span aria-hidden className="bg-success inline-block size-2 rounded-full" />
-              </div>
-            )}
-          </div>
-        </nav>
-      </aside>
-
-      {/* Floating LMS-style Tooltip */}
-      {tooltip.visible && !isExpanded && (
+      {tooltip && (
         <div
-          className="fixed z-[10000] rounded-md bg-neutral-900 px-2.5 py-1 text-xs font-medium text-white shadow-lg pointer-events-none whitespace-nowrap"
-          style={{
-            top: tooltip.top,
-            left: tooltip.left,
-            transform: 'translateY(-50%)',
-          }}
+          className="bg-ink text-surface fixed z-[10000] rounded-md px-3 py-1.5 text-sm whitespace-nowrap shadow-lg pointer-events-none"
+          style={{ top: tooltip.top, left: tooltip.left, transform: 'translateY(-50%)' }}
         >
           {tooltip.text}
         </div>
       )}
-    </div>
+
+      <LogoutConfirm open={confirmOpen} onClose={() => setConfirmOpen(false)} />
+    </nav>
   )
 }

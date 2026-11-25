@@ -25,8 +25,8 @@ export function Modal({ open, title, onClose, children, footer, maxWidth = 620 }
       fullWidth
       slotProps={{ paper: { sx: { maxWidth, m: 2, width: '100%' } } }}
     >
-      <div className="border-line flex items-center justify-between border-b px-[22px] py-[19px]">
-        <h2 id={titleId} className="text-ink m-0 text-base font-bold">
+      <div className="border-line flex items-center justify-between border-b px-[22px] py-[13px]">
+        <h2 id={titleId} className="text-brand m-0 text-base font-semibold text-[18px]">
           {title}
         </h2>
         <IconButton aria-label="Close dialog" onClick={onClose} size="small">

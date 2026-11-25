@@ -1,8 +1,9 @@
 import type { ComponentType } from 'react'
 import { Navigate, redirect, type RouteObject } from 'react-router-dom'
 import { PageLoader } from '@/components/feedback/PageLoader'
+import { AuthGuard } from '@/features/auth/AuthGuard'
 import { AppShell } from './layout/AppShell'
-import { RouteErrorPage } from './RouteErrorPage'
+import { NotFoundPage, RouteErrorPage } from './RouteErrorPage'
 
 /** Code-splits a page: `lazyPage(() => import('...'), 'NamedExport')`. */
 function lazyPage<K extends string>(
@@ -32,8 +33,19 @@ export const routes: RouteObject[] = [
     ...lazyPage(() => import('@/features/auth/ForgotPasswordPage'), 'ForgotPasswordPage'),
   },
   {
+    // Cognito Hosted UI redirect target (VITE_COGNITO_REDIRECT_SIGN_IN).
+    path: 'home',
+    errorElement: <RouteErrorPage />,
+    hydrateFallbackElement: <PageLoader />,
+    ...lazyPage(() => import('@/features/auth/AuthCallbackPage'), 'AuthCallbackPage'),
+  },
+  {
     path: '/',
-    element: <AppShell />,
+    element: (
+      <AuthGuard>
+        <AppShell />
+      </AuthGuard>
+    ),
     errorElement: <RouteErrorPage />,
     hydrateFallbackElement: <PageLoader />,
     children: [
@@ -74,6 +86,16 @@ export const routes: RouteObject[] = [
             ),
           },
         ],
+      },
+      {
+        path: 'targets',
+        handle: { crumb: 'Targets' },
+        ...lazyPage(() => import('@/features/targets/TargetsPage'), 'TargetsPage'),
+      },
+      {
+        path: 'calendar',
+        handle: { crumb: 'Calendar' },
+        ...lazyPage(() => import('@/features/calendar/CalendarPage'), 'CalendarPage'),
       },
       {
         path: 'loan-opportunities',
@@ -203,6 +225,11 @@ export const routes: RouteObject[] = [
         ...lazyPage(() => import('@/features/reports/ReportsPage'), 'ReportsPage'),
       },
       {
+        path: 'user-management',
+        handle: { crumb: 'User management' },
+        ...lazyPage(() => import('@/features/users/UserManagementPage'), 'UserManagementPage'),
+      },
+      {
         path: 'settings',
         handle: { crumb: 'Settings' },
         children: [
@@ -230,9 +257,13 @@ export const routes: RouteObject[] = [
             handle: { crumb: 'Validations' },
             ...lazyPage(() => import('@/features/settings/ValidationsPage'), 'ValidationsPage'),
           },
+          {
+            path: 'roles',
+            element: <Navigate to="/user-management" replace />,
+          },
         ],
       },
-      { path: '*', element: <Navigate to="/" replace /> },
+      { path: '*', element: <NotFoundPage /> },
     ],
   },
 ]
