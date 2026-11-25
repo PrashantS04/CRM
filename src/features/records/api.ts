@@ -388,6 +388,8 @@ export interface SearchItem {
   title: string
   archived: boolean
   values: Values
+  /** Carries a Hot flag that has not expired (brief §3.8.2); Hot records come first in the default order. */
+  hot?: boolean
 }
 
 export interface SearchPage {

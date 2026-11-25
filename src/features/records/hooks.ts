@@ -80,6 +80,8 @@ export function useRecordConfig(object: ObjectKey) {
       rules: rules.data?.rules ?? null,
       ruleWarnings: rules.data?.warnings ?? [],
       picklists: picklists ?? {},
+      /** Business settings (Hot expiry, queue owners...), changed in Setup without a release (brief §2.2). */
+      settings: metadata.data?.settings ?? {},
       users: users.data ?? [],
       me: me.data ?? null,
       loading: fields.isPending || rules.isPending || metadata.isPending || users.isPending || me.isPending,
@@ -89,7 +91,7 @@ export function useRecordConfig(object: ObjectKey) {
       field,
       can,
     }),
-    [object, fields.data, rules.data, picklists, users.data, me.data, fields.isPending, rules.isPending,
+    [object, fields.data, rules.data, picklists, metadata.data?.settings, users.data, me.data, fields.isPending, rules.isPending,
       metadata.isPending, users.isPending, me.isPending, fields.error, rules.error, metadata.error, users.error,
       me.error, optionLabel, userName, field, can],
   )

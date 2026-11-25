@@ -1,4 +1,4 @@
-import { Archive, ArrowLeft, ChevronDown, Mail, Pencil, Phone, RotateCcw, Star, Trash2, Unlink, UserPlus } from 'lucide-react'
+import { Archive, ArrowLeft, ChevronDown, Flame, Mail, Pencil, Phone, RotateCcw, Star, Trash2, Unlink, UserPlus } from 'lucide-react'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { usePageCrumb } from '@/app/layout/breadcrumbContext'
@@ -7,7 +7,7 @@ import { useToast } from '@/components/feedback/toastContext'
 import { Badge, Button, Modal } from '@/components/ui'
 import { cn } from '@/lib/cn'
 import { formatDate } from '@/lib/format'
-import { archiveRecord, restoreRecord, type LookupItem, type ObjectKey, type RecordDetail } from './api'
+import { archiveRecord, restoreRecord, setRecordHot, type LookupItem, type ObjectKey, type RecordDetail } from './api'
 import { actionPresentation } from './audit'
 import { FieldGrid, groupBySection, isWide } from './fields/DynamicForm'
 import { FieldLabel, Select, inputClass } from './fields/FieldInput'
@@ -100,6 +100,21 @@ function RecordView({ object, record, config, tab, setTab }: {
     }
   }
 
+  const [hotPending, setHotPending] = useState(false)
+  const hot = !!record.flags.hotSince
+  const hotDays = typeof config.settings.hotExpiryDays === 'number' ? config.settings.hotExpiryDays : 30
+  const toggleHot = async () => {
+    setHotPending(true)
+    try {
+      settle(await setRecordHot(object, record.id, !hot))
+      toast.success(hot ? 'Hot flag cleared' : `Marked Hot for ${hotDays} days`)
+    } catch (e) {
+      toast.error(errorMessage(e, 'Changing the Hot flag failed.'))
+    } finally {
+      setHotPending(false)
+    }
+  }
+
   const restore = async () => {
     try {
       settle(await restoreRecord(object, record.id, record.version))
@@ -129,6 +144,9 @@ function RecordView({ object, record, config, tab, setTab }: {
                 <Badge tone="neutral" shape="chip" title="Read through the primary Entity link">via {config.optionLabel('ENTITY_TYPE', record.inheritedEntityType)}</Badge>
               )}
               {record.archived && <Badge tone="neutral" shape="chip">Archived</Badge>}
+              {hot && !record.archived && (
+                <Badge tone="brand" shape="chip" title={`Hot since ${formatDate(record.flags.hotSince!)}. Clears after ${hotDays} days unless renewed.`}>Hot</Badge>
+              )}
               {record.flags.possibleDuplicateReason && <Badge tone="warning" shape="chip" title={record.flags.possibleDuplicateReason}>Possible duplicate</Badge>}
               {inQueue && !record.archived && <Badge tone="warning" shape="chip">Needs review</Badge>}
             </div>
@@ -152,6 +170,13 @@ function RecordView({ object, record, config, tab, setTab }: {
             <Badge tone={record.values.engagementTemperature === 'HOT' ? 'brand' : 'neutral'}>
               {config.optionLabel(tempField.picklist, record.values.engagementTemperature)}
             </Badge>
+          )}
+          {canEdit && (
+            <Button variant={hot ? 'primary' : 'secondary'} startIcon={<Flame size={15} />} onClick={() => void toggleHot()}
+              disabled={hotPending} aria-pressed={hot}
+              title={hot ? 'Clear the Hot flag' : `Mark Hot: moves to the top of lists for ${hotDays} days`}>
+              {hot ? 'Hot' : 'Mark hot'}
+            </Button>
           )}
           {phone && <Button href={`tel:${phone.replace(/[^\d+]/g, '')}`} startIcon={<Phone size={15} />}>Call</Button>}
           {email && <Button href={`mailto:${email}`} startIcon={<Mail size={15} />}>Email</Button>}
@@ -360,8 +385,13 @@ function SectionCard({ index, title, fields, record, config, context, canEdit, o
                       )}
                     </dt>
                     <dd className="text-ink m-0 flex flex-wrap items-center gap-2 text-sm font-semibold">
-                      <FieldValue dataType={f.dataType} picklist={f.picklist} value={record.values[f.apiName]}
-                        optionLabel={config.optionLabel} userName={config.userName} />
+                      {f.sensitive && !config.can('CUSTOM_FIELD_SENSITIVE') ? (
+                        // The server leaves the value out; say so rather than showing it as empty.
+                        <span className="text-muted font-normal" title="Only users with permission see this value.">Hidden</span>
+                      ) : (
+                        <FieldValue dataType={f.dataType} picklist={f.picklist} value={record.values[f.apiName]}
+                          optionLabel={config.optionLabel} userName={config.userName} />
+                      )}
                       {record.dataGaps.includes(f.apiName) && <Badge tone="warning" shape="chip">Missing</Badge>}
                     </dd>
                   </div>

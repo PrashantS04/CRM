@@ -209,6 +209,7 @@ export function RecordListPage({ object }: { object: ObjectKey }) {
                       <span className="flex items-center gap-2.5">
                         <Avatar name={item.title} />
                         <a href={`${info.route}/${item.id}`} onClick={(e) => e.preventDefault()} className="text-brand font-bold whitespace-nowrap no-underline">{item.title}</a>
+                        {item.hot && !item.archived && <Badge tone="brand" shape="chip" title="Hot: moves to the top of lists">Hot</Badge>}
                         {item.archived && <Badge tone="neutral" shape="chip">Archived</Badge>}
                       </span>
                     </td>
