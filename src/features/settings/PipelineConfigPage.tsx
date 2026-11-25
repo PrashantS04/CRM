@@ -87,64 +87,67 @@ function StageList({ pipeline, selected, onSelect }: StageListProps) {
       />
       <ol className="m-0 grid list-none gap-2.5 p-0">
         {pipeline.stages.map((stage, index) => (
-          <li
-            key={`${stage}-${index}`}
-            draggable
-            onDragStart={() => setDragIndex(index)}
-            onDragOver={(event) => event.preventDefault()}
-            onDrop={() => drop(index)}
-            onDragEnd={() => setDragIndex(null)}
-            className={cn(
-              'border-line grid grid-cols-[1fr_auto] items-center gap-2.5 rounded-lg border p-[13px]',
-              index === selected ? 'border-brand bg-brand-tint' : 'bg-surface',
-              dragIndex === index && 'opacity-50',
-            )}
-          >
-            <button
-              type="button"
-              onClick={() => onSelect(index)}
-              aria-current={index === selected ? 'true' : undefined}
-              className="grid cursor-pointer grid-cols-[36px_1fr] items-center gap-2.5 border-0 bg-transparent p-0 text-left"
+          <li key={`${stage}-${index}`}>
+            {/* Dragging is a mouse shortcut; keyboard users reorder with the up/down buttons. The handlers sit on a
+                plain div (as in Setup) so the list item keeps its list semantics. */}
+            <div
+              draggable
+              onDragStart={() => setDragIndex(index)}
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={() => drop(index)}
+              onDragEnd={() => setDragIndex(null)}
+              className={cn(
+                'border-line grid grid-cols-[1fr_auto] items-center gap-2.5 rounded-lg border p-[13px]',
+                index === selected ? 'border-brand bg-brand-tint' : 'bg-surface',
+                dragIndex === index && 'opacity-50',
+              )}
             >
-              <span className="bg-neutral-soft text-neutral-text grid size-[34px] place-items-center rounded-full font-bold">
-                {index + 1}
-              </span>
-              <span>
-                <b className="text-sm">{stage}</b>
-                <small className="text-subtle mt-[3px] block">
-                  Stage {index + 1} of {pipeline.stages.length}
-                </small>
-              </span>
-            </button>
-            <span className="flex items-center gap-1">
-              <GripVertical size={15} className="text-subtle cursor-grab" aria-hidden />
-              <IconButton
-                size="small"
-                aria-label={`Move ${stage} up`}
-                disabled={index === 0}
-                onClick={() =>
-                  moveStage.mutate(
-                    { id: pipeline.id, index, direction: -1 },
-                    { onSuccess: () => onSelect(index - 1) },
-                  )
-                }
+              <button
+                type="button"
+                onClick={() => onSelect(index)}
+                aria-current={index === selected ? 'true' : undefined}
+                className="grid cursor-pointer grid-cols-[36px_1fr] items-center gap-2.5 border-0 bg-transparent p-0 text-left"
               >
-                <ArrowUp size={14} />
-              </IconButton>
-              <IconButton
-                size="small"
-                aria-label={`Move ${stage} down`}
-                disabled={index === pipeline.stages.length - 1}
-                onClick={() =>
-                  moveStage.mutate(
-                    { id: pipeline.id, index, direction: 1 },
-                    { onSuccess: () => onSelect(index + 1) },
-                  )
-                }
-              >
-                <ArrowDown size={14} />
-              </IconButton>
-            </span>
+                <span className="bg-neutral-soft text-neutral-text grid size-[34px] place-items-center rounded-full font-bold">
+                  {index + 1}
+                </span>
+                <span>
+                  <b className="text-sm">{stage}</b>
+                  <small className="text-subtle mt-[3px] block">
+                    Stage {index + 1} of {pipeline.stages.length}
+                  </small>
+                </span>
+              </button>
+              <span className="flex items-center gap-1">
+                <GripVertical size={15} className="text-subtle cursor-grab" aria-hidden />
+                <IconButton
+                  size="small"
+                  aria-label={`Move ${stage} up`}
+                  disabled={index === 0}
+                  onClick={() =>
+                    moveStage.mutate(
+                      { id: pipeline.id, index, direction: -1 },
+                      { onSuccess: () => onSelect(index - 1) },
+                    )
+                  }
+                >
+                  <ArrowUp size={14} />
+                </IconButton>
+                <IconButton
+                  size="small"
+                  aria-label={`Move ${stage} down`}
+                  disabled={index === pipeline.stages.length - 1}
+                  onClick={() =>
+                    moveStage.mutate(
+                      { id: pipeline.id, index, direction: 1 },
+                      { onSuccess: () => onSelect(index + 1) },
+                    )
+                  }
+                >
+                  <ArrowDown size={14} />
+                </IconButton>
+              </span>
+            </div>
           </li>
         ))}
       </ol>

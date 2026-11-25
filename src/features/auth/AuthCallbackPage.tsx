@@ -122,7 +122,7 @@ export function AuthCallbackPage() {
       }
     }
 
-    const cancelHub = Hub.listen('auth', ({ payload }: { payload: any }) => {
+    const cancelHub = Hub.listen('auth', ({ payload }) => {
       if (payload.event === 'signedIn') {
         cancelHub()
         void finishLogin(null)

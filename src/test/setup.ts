@@ -1,9 +1,15 @@
+import type * as AmplifyAuth from '@aws-amplify/auth'
 import * as matchers from '@testing-library/jest-dom/matchers'
+import { configure } from '@testing-library/react'
 import { vi } from 'vitest'
 import { applyCssVariables } from '@/theme/cssVars'
 
 // Register jest-dom matchers on vitest's global `expect` (vitest `globals: true`).
 expect.extend(matchers)
+
+// Routes are lazy-loaded; with every test file running in parallel the first render of a page can take longer than
+// Testing Library's 1 s default for findBy*/waitFor, which made page-level tests fail at random under load.
+configure({ asyncUtilTimeout: 5000 })
 
 // Recharts and MUI measure the DOM; jsdom has no layout engine.
 class ResizeObserverStub {
@@ -49,7 +55,7 @@ const fakeIdToken = {
 }
 
 vi.mock('@aws-amplify/auth', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@aws-amplify/auth')>()
+  const actual = await importOriginal<typeof AmplifyAuth>()
   return {
     ...actual,
     fetchAuthSession: vi.fn(async () => ({
